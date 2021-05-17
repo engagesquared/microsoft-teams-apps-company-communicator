@@ -6,7 +6,7 @@ import { RouteComponentProps } from 'react-router-dom';
 import { withTranslation, WithTranslation } from "react-i18next";
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import * as AdaptiveCards from "adaptivecards";
-import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup } from '@fluentui/react-northstar'
+import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup, DropdownProps, Slider } from '@fluentui/react-northstar'
 import * as microsoftTeams from "@microsoft/teams-js";
 
 import './newMessage.scss';
@@ -14,7 +14,7 @@ import './teamTheme.scss';
 import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
-    setCardAuthor, setCardBtn
+    setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize
 } from '../AdaptiveCard/adaptiveCard';
 import { getBaseUrl } from '../../configVariables';
 import { ImageUtil } from '../../utility/imageutility';
@@ -49,6 +49,9 @@ export interface formState {
     summary?: string,
     btnLink?: string,
     imageLink?: string,
+    imageSize?: string,
+    imageWidth?: number,
+    imageHeight?: number,
     btnTitle?: string,
     author: string,
     card?: any,
@@ -84,6 +87,11 @@ export interface INewMessageProps extends RouteComponentProps, WithTranslation {
 class NewMessage extends React.Component<INewMessageProps, formState> {
     readonly localize: TFunction;
     private card: any;
+    private ratio: number = 1;
+    private imageMaxWidth: number = 400;
+    private imageMinWidth: number = 1;
+    private imageMaxHeight: number = 400;
+    private imageMinHeight: number = 1;
 
     constructor(props: INewMessageProps) {
         super(props);
@@ -350,6 +358,68 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                             error={!(this.state.errorImageUrlMessage === "")}
                                             autoComplete="off"
                                         />
+                                        {this.state.imageLink && !this.state.errorImageUrlMessage ? (
+                                            <>
+                                                <div className="imageSizeContainer">
+                                                    <Text>Image size</Text>
+                                                    <Dropdown
+                                                        items={["Auto", "Large", "Medium", "Small", "Custom"]}
+                                                        defaultValue="Auto"
+                                                        placeholder="Image size"
+                                                        onChange={this.onImageSizeChanged}
+                                                        checkable
+                                                    />
+                                                </div>
+                                                {this.state.imageSize === "Custom" ? (
+                                                    <>
+                                                        <div className="imageSliderContainer">
+                                                            <Text>Image width</Text>
+                                                            <Flex vAlign="center" gap="gap.small">
+                                                                <Slider
+                                                                    min={this.imageMinWidth}
+                                                                    max={this.imageMaxWidth}
+                                                                    value={this.state.imageWidth}
+                                                                    onChange={this.onImageWidthSliderChanged}
+                                                                />
+                                                                <Input
+                                                                    type="number"
+                                                                    input={{
+                                                                        styles: {
+                                                                            width: '90px',
+                                                                        }
+                                                                    }}
+                                                                    value={this.state.imageWidth}
+                                                                    icon={<span>px</span>}
+                                                                    onChange={this.onImageWidthInputChanged}
+                                                                />
+                                                            </Flex>
+                                                        </div>
+                                                        <div className="imageSliderContainer">
+                                                            <Text>Image height</Text>
+                                                            <Flex vAlign="center" gap="gap.small">
+                                                                <Slider
+                                                                    min={this.imageMinHeight}
+                                                                    max={this.imageMaxHeight}
+                                                                    value={this.state.imageHeight}
+                                                                    onChange={this.onImageHeightSliderChanged}
+                                                                />
+                                                                <Input
+                                                                    type="number"
+                                                                    input={{
+                                                                        styles: {
+                                                                            width: '90px',
+                                                                        }
+                                                                    }}
+                                                                    value={this.state.imageHeight}
+                                                                    icon={<span>px</span>}
+                                                                    onChange={this.onImageHeightInputChanged}
+                                                                />
+                                                            </Flex>
+                                                        </div>
+                                                    </>
+                                                ) : null}
+                                            </>
+                                        ) : null}
                                         <Text className={(this.state.errorImageUrlMessage === "") ? "hide" : "show"} error size="small" content={this.state.errorImageUrlMessage} />
 
                                         <div className="textArea">
@@ -360,6 +430,14 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                                 value={this.state.summary}
                                                 onChange={this.onSummaryChanged}
                                                 fluid />
+                                            <Flex vAlign="center" gap="gap.smaller">
+                                                <Text size="small" as="div" disabled>
+                                                    Supports basic Markdown expressions.
+                                                </Text>
+                                                <a href="https://docs.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-format?tabs=adaptive-md%2Cconnector-html#formatting-cards-with-markdown" target="_blank" rel="noreferrer">
+                                                    <Text size="small" as="div" disabled>Read more.</Text>
+                                                </a>
+                                            </Flex>
                                         </div>
 
                                         <Input className="inputField"
@@ -787,26 +865,46 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         });
     }
 
-    private onImageLinkChanged = (event: any) => {
+    private onImageLinkChanged = async (event: any) => {
         let url = event.target.value.toLowerCase();
+        if (url === "") {
+            this.setState({
+                imageSize: ""
+            });
+            setCardImageSize(this.card, "");
+        }
         if (!((url === "") || (url.startsWith("https://") || (url.startsWith("data:image/png;base64,")) || (url.startsWith("data:image/jpeg;base64,")) || (url.startsWith("data:image/gif;base64,"))))) {
             this.setState({
+                imageSize: "",
                 errorImageUrlMessage: this.localize("ErrorURLMessage")
             });
+            setCardImageSize(this.card, "");
         } else {
             this.setState({
                 errorImageUrlMessage: ""
             });
         }
 
-        let showDefaultCard = (!this.state.title && !event.target.value && !this.state.summary && !this.state.author && !this.state.btnTitle && !this.state.btnLink);
+        if (this.state.imageSize === "Custom") {
+            const imageSize = await this.getImageSize(url || "");
+            setCardImageWidth(this.card, imageSize.width);
+            setCardImageHeight(this.card, imageSize.height);
+            this.setState({
+                imageWidth: imageSize.width,
+                imageHeight: imageSize.height
+            }, () => {
+                this.updateCard();
+            });
+        }
+
+        let showDefaultCard = (!this.state.title && !url && !this.state.summary && !this.state.author && !this.state.btnTitle && !this.state.btnLink);
         setCardTitle(this.card, this.state.title);
-        setCardImageLink(this.card, event.target.value);
+        setCardImageLink(this.card, url);
         setCardSummary(this.card, this.state.summary);
         setCardAuthor(this.card, this.state.author);
         setCardBtn(this.card, this.state.btnTitle, this.state.btnLink);
         this.setState({
-            imageLink: event.target.value,
+            imageLink: url,
             card: this.card
         }, () => {
             if (showDefaultCard) {
@@ -814,6 +912,145 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             }
             this.updateCard();
         });
+    }
+    
+    private getHeight(value: number) {
+        var height = value / this.ratio;
+        return Math.round(height);
+    }
+
+    private getWidth(value: number) {
+        var width = this.ratio * value;
+        return Math.round(width);
+    }
+
+    private getImageSize = async (url: string): Promise<any> => {
+        return new Promise((res) => {
+            var img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                this.ratio = width / height;
+                if (width > this.imageMaxWidth) {
+                    width = this.imageMaxWidth;
+                    height = this.getHeight(width);
+                }
+                if (height > this.imageMaxHeight) {
+                    height = this.imageMaxHeight;
+                    width = this.getWidth(height);
+                }
+                res({ width, height });
+            };
+            img.src = url;
+        });
+    }
+
+    private onImageSizeChanged = async (event: React.MouseEvent | React.KeyboardEvent | null, data: DropdownProps) => {
+        if (data.value === "Custom") {
+            const imageSize = await this.getImageSize(this.state.imageLink || "");
+            setCardImageWidth(this.card, imageSize.width);
+            setCardImageHeight(this.card, imageSize.height);
+            this.setState({
+                imageWidth: imageSize.width,
+                imageHeight: imageSize.height,
+                imageSize: data.value
+            }, () => {
+                this.updateCard();
+            });
+            return;
+        }
+
+        setCardImageSize(this.card, data.value as string);
+        this.setState({
+            imageSize: data.value as string,
+            card: this.card
+        }, () => {
+            this.updateCard();
+        });
+    }
+
+    private onImageWidthChanged = (value: number) => {
+        if (!this.state.imageWidth || !this.state.imageHeight) {
+            return;
+        }
+
+        if(this.state.imageHeight <= this.imageMinHeight && value < this.state.imageWidth) {
+            return;
+        }
+
+        if(this.state.imageHeight >= this.imageMaxHeight && value > this.state.imageWidth) {
+            return;
+        }
+
+        let imageWidth = value < this.imageMaxWidth ? value : this.imageMaxWidth;
+        let imageHeight = this.getHeight(imageWidth);
+        if (imageHeight > this.imageMaxHeight) {
+            imageHeight = this.imageMaxHeight;
+            imageWidth = this.getWidth(imageHeight);
+        }
+        if (imageHeight < this.imageMinHeight) {
+            imageHeight = this.imageMinHeight;
+            imageWidth = this.getWidth(imageHeight);
+        }
+        setCardImageWidth(this.card, imageWidth);
+        setCardImageHeight(this.card, imageHeight);
+        this.setState({
+            imageWidth: imageWidth,
+            imageHeight: imageHeight,
+            card: this.card
+        }, () => {
+            this.updateCard();
+        });
+    }
+
+    private onImageWidthSliderChanged = (e: any, data: any) => {
+        this.onImageWidthChanged(Number(data.value));
+    }
+
+    private onImageWidthInputChanged = (e: any) => {
+        this.onImageWidthChanged(Number(e.target.value));
+    }
+
+    private onImageHeightChanged = (value: number) => {
+        if (!this.state.imageWidth || !this.state.imageHeight) {
+            return;
+        }
+
+        if(this.state.imageWidth <= this.imageMinWidth && value < this.state.imageHeight) {
+            return;
+        }
+
+        if(this.state.imageWidth >= this.imageMaxWidth && value > this.state.imageHeight) {
+            return;
+        }
+
+        let imageHeight = value < this.imageMaxHeight ? value : this.imageMaxHeight;
+        let imageWidth = this.getWidth(imageHeight);
+        if (imageWidth > this.imageMaxWidth) {
+            imageWidth = this.imageMaxWidth;
+            imageHeight = this.getHeight(imageWidth);
+        }
+        if (imageWidth < this.imageMinWidth) {
+            imageWidth = this.imageMinWidth;
+            imageHeight = this.getHeight(imageWidth);
+        }
+        setCardImageWidth(this.card, imageWidth);
+        setCardImageHeight(this.card, imageHeight);
+        this.setState({
+            imageWidth: imageWidth,
+            imageHeight: imageHeight,
+            card: this.card
+        }, () => {
+            this.updateCard();
+        });
+    }
+
+    private onImageHeightSliderChanged = (e: any, data: any) => {
+        this.onImageHeightChanged(Number(data.value));
+    }
+
+    private onImageHeightInputChanged = (e: any) => {
+        this.onImageHeightChanged(Number(e.target.value));
     }
 
     private onSummaryChanged = (event: any) => {

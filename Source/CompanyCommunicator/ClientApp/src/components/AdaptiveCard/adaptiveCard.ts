@@ -1,7 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as AdaptiveCards from "adaptivecards";
+import MarkdownIt from "markdown-it";
 import { TFunction } from "i18next";
+
+AdaptiveCards.AdaptiveCard.onProcessMarkdown = function(text, result) {
+    const md = new MarkdownIt();
+    // 'blockquote', 'reference', 'paragraph' currently don't supported by adaptive cards, but disabling these rules causes infinity loop
+    md.block.ruler.enableOnly(['list', 'blockquote', 'reference', 'paragraph']);
+    md.inline.ruler.enableOnly(['text', 'emphasis', 'link']);
+	result.outputHtml = md.render(text);
+	result.didProcess = true;
+}
 
 export const getInitAdaptiveCard = (t: TFunction) => {
     const titleTextAsString = t("TitleText");
@@ -20,8 +31,9 @@ export const getInitAdaptiveCard = (t: TFunction) => {
                     "type": "Image",
                     "spacing": "Default",
                     "url": "",
-                    "size": "Stretch",
-                    "width": "400px",
+                    "size": "Auto",
+                    "width": "",
+                    "height": "",
                     "altText": ""
                 },
                 {
@@ -57,6 +69,22 @@ export const getCardImageLink = (card: any) => {
 
 export const setCardImageLink = (card: any, imageLink?: string) => {
     card.body[1].url = imageLink;
+}
+
+export const setCardImageWidth = (card: any, width: number) => {
+    card.body[1].width = `${width}px`;
+    card.body[1].size = null;
+}
+
+export const setCardImageHeight = (card: any, height: number) => {
+    card.body[1].height = `${height}px`;
+    card.body[1].size = null;
+}
+
+export const setCardImageSize = (card: any, size: string) => {
+    card.body[1].size = size;
+    card.body[1].width = null;
+    card.body[1].height = null;
 }
 
 export const getCardSummary = (card: any) => {
