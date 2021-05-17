@@ -5,10 +5,10 @@
   "id": "1c07cd26-a088-4db8-8928-ace382fa219f",
   "packageName": "com.microsoft.teams.companycommunicator.authors",
   "developer": {
-    "name": "<<companyName>>",
-    "websiteUrl": "<<websiteUrl>>",
-    "privacyUrl": "<<privacyUrl>>",
-    "termsOfUseUrl": "<<termsOfUseUrl>>"
+    "name": "Engage Squared",
+    "websiteUrl": "https://engagesq.com/",
+    "privacyUrl": "https://engagesq.com/",
+    "termsOfUseUrl": "https://engagesq.com/"
   },
   "icons": {
     "color": "color.png",
@@ -22,7 +22,7 @@
     "short": "Broadcast messages to multiple teams and people in one go",
     "full": "Broadcasts messages to multiple teams and individuals through channel posts and chat messages"
   },
-  "accentColor": "#64A2CC",
+  "accentColor": "#ead923",
   "configurableTabs": [{
     "configurationUrl": "https://<<appDomain>>/configtab",
     "canUpdateConfiguration": true,
