@@ -12,7 +12,7 @@ import { Loader, List, Image, Button, DownloadIcon, AcceptIcon, Flex } from '@fl
 import * as microsoftTeams from "@microsoft/teams-js";
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
-    setCardAuthor, setCardBtn
+    setCardAuthor, setCardBtn, setCardImageSize, setCardImageHeight, setCardImageWidth
 } from '../AdaptiveCard/adaptiveCard';
 import { ImageUtil } from '../../utility/imageutility';
 import { formatDate, formatDuration, formatNumber } from '../../i18n';
@@ -34,6 +34,9 @@ export interface IMessage {
     unknown?: string;
     sentDate?: string;
     imageLink?: string;
+    imageSize?: string;
+    imageHeight?: number;
+    imageWidth?: number;
     summary?: string;
     author?: string;
     buttonLink?: string;
@@ -100,6 +103,11 @@ class StatusTaskModule extends React.Component<StatusTaskModuleProps, IStatusSta
                 }, () => {
                     setCardTitle(this.card, this.state.message.title);
                     setCardImageLink(this.card, this.state.message.imageLink);
+                    setCardImageSize(this.card, this.state.message.imageSize || "");
+                    if (this.state.message.imageHeight && this.state.message.imageWidth) {
+                        setCardImageHeight(this.card, this.state.message.imageHeight);
+                        setCardImageWidth(this.card, this.state.message.imageWidth);
+                    }
                     setCardSummary(this.card, this.state.message.summary);
                     setCardAuthor(this.card, this.state.message.author);
                     if (this.state.message.buttonTitle !== "" && this.state.message.buttonLink !== "") {
