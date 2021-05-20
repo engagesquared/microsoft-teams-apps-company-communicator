@@ -136,6 +136,9 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.DraftNotificationPreview
             var adaptiveCard = this.adaptiveCardCreator.CreateAdaptiveCard(
                 draftNotificationEntity.Title,
                 draftNotificationEntity.ImageLink,
+                draftNotificationEntity.ImageSize,
+                draftNotificationEntity.ImageHeight,
+                draftNotificationEntity.ImageWidth,
                 draftNotificationEntity.Summary,
                 draftNotificationEntity.Author,
                 draftNotificationEntity.ButtonTitle,

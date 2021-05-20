@@ -37,6 +37,21 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
         public string ImageLink { get; set; }
 
         /// <summary>
+        /// Gets or sets the image size.
+        /// </summary>
+        public string ImageSize { get; set; }
+
+        /// <summary>
+        /// Gets or sets the image height.
+        /// </summary>
+        public int ImageHeight { get; set; }
+
+        /// <summary>
+        /// Gets or sets the image width.
+        /// </summary>
+        public int ImageWidth { get; set; }
+
+        /// <summary>
         /// Gets or sets the summary text of the notification's content.
         /// </summary>
         public string Summary { get; set; }

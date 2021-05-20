@@ -28,6 +28,21 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         public string ImageLink { get; set; }
 
         /// <summary>
+        /// Gets or sets the Image Size value.
+        /// </summary>
+        public string ImageSize { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Image Width value.
+        /// </summary>
+        public int ImageWidth { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Image Height value.
+        /// </summary>
+        public int ImageHeight { get; set; }
+
+        /// <summary>
         /// Gets or sets the Summary value.
         /// </summary>
         public string Summary { get; set; }

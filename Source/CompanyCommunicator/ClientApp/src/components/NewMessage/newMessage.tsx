@@ -34,6 +34,9 @@ export interface IDraftMessage {
     id?: string,
     title: string,
     imageLink?: string,
+    imageSize?: string,
+    imageHeight?: number,
+    imageWidth?: number,
     summary?: string,
     author: string,
     buttonTitle?: string,
@@ -301,6 +304,12 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
 
             setCardTitle(this.card, draftMessageDetail.title);
             setCardImageLink(this.card, draftMessageDetail.imageLink);
+            setCardImageSize(this.card, draftMessageDetail.imageSize);
+            if (draftMessageDetail.imageSize === "Custom") {
+                this.ratio = Number(draftMessageDetail.imageWidth / draftMessageDetail.imageHeight);
+                setCardImageHeight(this.card, draftMessageDetail.imageHeight);
+                setCardImageWidth(this.card, draftMessageDetail.imageWidth);
+            }
             setCardSummary(this.card, draftMessageDetail.summary);
             setCardAuthor(this.card, draftMessageDetail.author);
             setCardBtn(this.card, draftMessageDetail.buttonTitle, draftMessageDetail.buttonLink);
@@ -310,6 +319,9 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 summary: draftMessageDetail.summary,
                 btnLink: draftMessageDetail.buttonLink,
                 imageLink: draftMessageDetail.imageLink,
+                imageSize: draftMessageDetail.imageSize,
+                imageHeight: draftMessageDetail.imageHeight,
+                imageWidth: draftMessageDetail.imageWidth,
                 btnTitle: draftMessageDetail.buttonTitle,
                 author: draftMessageDetail.author,
                 allUsersOptionSelected: draftMessageDetail.allUsers,
@@ -367,6 +379,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                                         defaultValue="Auto"
                                                         placeholder="Image size"
                                                         onChange={this.onImageSizeChanged}
+                                                        value={this.state.imageSize}
                                                         checkable
                                                     />
                                                 </div>
@@ -788,6 +801,9 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             id: this.state.messageId,
             title: this.state.title,
             imageLink: this.state.imageLink,
+            imageSize: this.state.imageLink && !this.state.imageSize ? "Auto" : this.state.imageSize,
+            imageHeight: this.state.imageSize === "Custom" ? this.state.imageHeight : undefined,
+            imageWidth: this.state.imageSize === "Custom" ? this.state.imageWidth : undefined,
             summary: this.state.summary,
             author: this.state.author,
             buttonTitle: this.state.btnTitle,

@@ -6,6 +6,7 @@
 namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
 {
     using System;
+    using System.Collections.Generic;
     using AdaptiveCards;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.NotificationData;
 
@@ -24,6 +25,9 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
             return this.CreateAdaptiveCard(
                 notificationDataEntity.Title,
                 notificationDataEntity.ImageLink,
+                notificationDataEntity.ImageSize,
+                notificationDataEntity.ImageHeight,
+                notificationDataEntity.ImageWidth,
                 notificationDataEntity.Summary,
                 notificationDataEntity.Author,
                 notificationDataEntity.ButtonTitle,
@@ -35,6 +39,9 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
         /// </summary>
         /// <param name="title">The adaptive card's title value.</param>
         /// <param name="imageUrl">The adaptive card's image URL.</param>
+        /// <param name="imageSize">The adaptive card's image size.</param>
+        /// <param name="imageHeight">The adaptive card's image height.</param>
+        /// <param name="imageWidth">The adaptive card's image width.</param>
         /// <param name="summary">The adaptive card's summary value.</param>
         /// <param name="author">The adaptive card's author value.</param>
         /// <param name="buttonTitle">The adaptive card's button title value.</param>
@@ -43,6 +50,9 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
         public AdaptiveCard CreateAdaptiveCard(
             string title,
             string imageUrl,
+            string imageSize,
+            int imageHeight,
+            int imageWidth,
             string summary,
             string author,
             string buttonTitle,
@@ -61,13 +71,21 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
 
             if (!string.IsNullOrWhiteSpace(imageUrl))
             {
-                card.Body.Add(new AdaptiveImage()
+                var image = new AdaptiveImage()
                 {
                     Url = new Uri(imageUrl, UriKind.RelativeOrAbsolute),
                     Spacing = AdaptiveSpacing.Default,
-                    Size = AdaptiveImageSize.Stretch,
+                    Size = this.GetImageSize(imageSize),
                     AltText = string.Empty,
-                });
+                };
+
+                if (imageSize == "Custom")
+                {
+                    image.PixelHeight = (uint)imageHeight;
+                    image.PixelWidth = (uint)imageWidth;
+                }
+
+                card.Body.Add(image);
             }
 
             if (!string.IsNullOrWhiteSpace(summary))
@@ -101,6 +119,23 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
             }
 
             return card;
+        }
+
+        private AdaptiveImageSize GetImageSize(string size)
+        {
+            switch (size)
+            {
+                case "Auto":
+                    return AdaptiveImageSize.Auto;
+                case "Large":
+                    return AdaptiveImageSize.Large;
+                case "Medium":
+                    return AdaptiveImageSize.Medium;
+                case "Small":
+                    return AdaptiveImageSize.Small;
+                default:
+                    return AdaptiveImageSize.Auto;
+            }
         }
     }
 }
