@@ -12,6 +12,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Authentication
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Options;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Controllers;
 
     /// <summary>
     /// This class is an authorization handler, which handles the authorization requirement.
@@ -46,7 +47,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Authentication
             AuthorizationHandlerContext context,
             MustBeValidUpnRequirement requirement)
         {
-            if (this.disableCreatorUpnCheck || this.IsValidUpn(context))
+            var resource = context.Resource as Microsoft.AspNetCore.Routing.RouteEndpoint;
+            var endpoint = resource.RoutePattern.RawText;
+            var isHistoryRequest = endpoint.StartsWith("api/history");
+            if (this.disableCreatorUpnCheck || this.IsValidUpn(context) || isHistoryRequest)
             {
                 context.Succeed(requirement);
             }

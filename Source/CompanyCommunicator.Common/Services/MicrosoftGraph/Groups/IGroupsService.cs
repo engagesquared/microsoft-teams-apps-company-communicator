@@ -34,5 +34,12 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         /// <param name="query">query param.</param>
         /// <returns>list of group.</returns>
         Task<IList<Group>> SearchAsync(string query);
+
+        /// <summary>
+        /// Get user groups.
+        /// </summary>
+        /// <param name="userAadId">user id.</param>
+        /// <returns>list of group.</returns>
+        Task<IUserTransitiveMemberOfCollectionWithReferencesPage> GetUserGroups(string userAadId);
     }
 }

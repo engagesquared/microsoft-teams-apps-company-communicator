@@ -32,5 +32,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.TeamData
         /// Gets or sets tenant id for the team.
         /// </summary>
         public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets team group id.
+        /// </summary>
+        public string TeamGroupId { get; set; }
     }
 }

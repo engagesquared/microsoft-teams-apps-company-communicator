@@ -25,6 +25,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         {
             this.Teams = new List<string>();
             this.Rosters = new List<string>();
+            this.TeamsGroups = new List<string>();
         }
 
         /// <summary>
@@ -36,6 +37,11 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         /// Gets or sets Rosters audience id collection.
         /// </summary>
         public IEnumerable<string> Rosters { get; set; }
+
+        /// <summary>
+        /// Gets or sets teams groups id collection.
+        /// </summary>
+        public IEnumerable<string> TeamsGroups { get; set; }
 
         /// <summary>
         /// Gets or sets Groups audience id collection.
@@ -71,6 +77,14 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
             {
                 var format = localizer.GetString("NumberOfRostersExceededLimitWarningFormat");
                 stringBuilder.AppendFormat(format, rosters.Count, DraftNotification.MaxSelectedTeamNum);
+                stringBuilder.AppendLine();
+            }
+
+            var teamsGroups = this.TeamsGroups.ToList();
+            if (teamsGroups.Count > DraftNotification.MaxSelectedTeamNum)
+            {
+                var format = localizer.GetString("NumberOfGroupsExceededLimitWarningFormat");
+                stringBuilder.AppendFormat(format, teamsGroups.Count, DraftNotification.MaxSelectedTeamNum);
                 stringBuilder.AppendLine();
             }
 

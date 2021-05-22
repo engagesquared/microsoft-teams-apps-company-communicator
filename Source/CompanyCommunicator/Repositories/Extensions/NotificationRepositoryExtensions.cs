@@ -49,6 +49,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Repositories.Extensions
                 Teams = notification.Teams,
                 Rosters = notification.Rosters,
                 Groups = notification.Groups,
+                TeamsGroups = notification.TeamsGroups,
                 AllUsers = notification.AllUsers,
             };
 

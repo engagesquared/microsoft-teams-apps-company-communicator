@@ -91,3 +91,8 @@ export const getAuthenticationConsentMetadata = async (windowLocationOriginDomai
     let url = `${baseAxiosUrl}/authenticationMetadata/consentUrl?windowLocationOriginDomain=${windowLocationOriginDomain}&loginhint=${login_hint}`;
     return await axios.get(url, undefined, false);
 }
+
+export const getHistoryNotifications = async (): Promise<any> => {
+    let url = `${baseAxiosUrl}/history`;
+    return await axios.get(url);
+}

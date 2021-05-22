@@ -185,5 +185,26 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
                                    .Header(Common.Constants.PermissionTypeKey, GraphPermissionType.Delegate.ToString())
                                    .GetAsync();
         }
+
+        /// <summary>
+        /// Get user groups.
+        /// </summary>
+        /// <param name="userAadId">user id.</param>
+        /// <returns>list of group.</returns>
+        public async Task<IUserTransitiveMemberOfCollectionWithReferencesPage> GetUserGroups(string userAadId)
+        {
+            var url = this.graphServiceClient.Users[userAadId].TransitiveMemberOf.AppendSegmentToRequestUrl("microsoft.graph.group");
+            var groupsRequest = new UserTransitiveMemberOfCollectionWithReferencesRequestBuilder(url, this.graphServiceClient);
+            var groups = await groupsRequest
+                                        .Request()
+                                        .WithMaxRetry(this.MaxRetry)
+                                        .Select(team => new
+                                        {
+                                            team.Id,
+                                        })
+                                        .Header(Common.Constants.PermissionTypeKey, GraphPermissionType.Delegate.ToString()) // Team.ReadBasic.All
+                                        .GetAsync();
+            return groups;
+        }
     }
 }

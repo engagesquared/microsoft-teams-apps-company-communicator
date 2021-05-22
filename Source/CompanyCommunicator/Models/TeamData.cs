@@ -19,5 +19,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         /// Gets or sets name.
         /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// Gets or sets team group id.
+        /// </summary>
+        public string TeamGroupId { get; set; }
     }
 }

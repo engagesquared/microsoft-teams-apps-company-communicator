@@ -27,6 +27,7 @@ type dropdownItem = {
     image: string,
     team: {
         id: string,
+        teamGroupId: string,
     },
 }
 
@@ -43,6 +44,7 @@ export interface IDraftMessage {
     buttonLink?: string,
     teams: any[],
     rosters: any[],
+    teamsGroups: any[],
     groups: any[],
     allUsers: boolean
 }
@@ -187,7 +189,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                     content: element.mail,
                     image: ImageUtil.makeInitialImage(element.name),
                     team: {
-                        id: element.id
+                        id: element.id,
+                        teamGroupId: element.teamGroupId
                     },
 
                 });
@@ -692,7 +695,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                     content: element.mail,
                     image: ImageUtil.makeInitialImage(element.name),
                     team: {
-                        id: element.id
+                        id: element.id,
+                        teamGroupId: element.teamGroupId
                     }
                 });
             });
@@ -792,9 +796,13 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
     private onSave = () => {
         const selectedTeams: string[] = [];
         const selctedRosters: string[] = [];
+        const selctedTeamGroups: string[] = [];
         const selectedGroups: string[] = [];
         this.state.selectedTeams.forEach(x => selectedTeams.push(x.team.id));
-        this.state.selectedRosters.forEach(x => selctedRosters.push(x.team.id));
+        this.state.selectedRosters.forEach(x => {
+            selctedRosters.push(x.team.id);
+            selctedTeamGroups.push(x.team.teamGroupId);
+        });
         this.state.selectedGroups.forEach(x => selectedGroups.push(x.team.id));
 
         const draftMessage: IDraftMessage = {
@@ -810,6 +818,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             buttonLink: this.state.btnLink,
             teams: selectedTeams,
             rosters: selctedRosters,
+            teamsGroups: selctedTeamGroups,
             groups: selectedGroups,
             allUsers: this.state.allUsersOptionSelected
         };

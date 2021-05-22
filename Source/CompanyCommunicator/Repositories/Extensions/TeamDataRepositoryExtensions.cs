@@ -66,6 +66,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Repositories.Extensions
                     Name = channelData.Team.Name,
                     ServiceUrl = activity.ServiceUrl,
                     TenantId = channelData.Tenant.Id,
+                    TeamGroupId = channelData.Team.AadGroupId,
                 };
 
                 return teamsDataEntity;

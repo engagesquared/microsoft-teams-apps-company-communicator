@@ -129,6 +129,21 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
         }
 
         /// <summary>
+        /// Gets or sets the TeamsGroupsInString value.
+        /// </summary>
+        public string TeamsGroupsInString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the team ids of the teams groups audience collection.
+        /// </summary>
+        [IgnoreProperty]
+        public IEnumerable<string> TeamsGroups
+        {
+            get => JsonConvert.DeserializeObject<IEnumerable<string>>(this.TeamsGroupsInString.IsNullOrEmpty() ? "[]" : this.TeamsGroupsInString);
+            set => this.TeamsGroupsInString = JsonConvert.SerializeObject(value);
+        }
+
+        /// <summary>
         /// Gets or sets the GroupsInsString value.
         /// This property helps to save the Grousp list in the Azure Table storage.
         /// Table storage doesn't support an array type of the property directly

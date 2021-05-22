@@ -46,6 +46,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                 var team = new TeamData
                 {
                     Id = entity.TeamId,
+                    TeamGroupId = entity.TeamGroupId,
                     Name = entity.Name,
                 };
                 result.Add(team);

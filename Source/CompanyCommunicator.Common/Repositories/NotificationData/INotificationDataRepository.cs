@@ -74,5 +74,12 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
         public Task SaveWarningInNotificationDataEntityAsync(
             string notificationDataEntityId,
             string warningMessage);
+
+        /// <summary>
+        /// Receive sent notifications to user.
+        /// </summary>
+        /// <param name="userGroupIds">User groups.</param>
+        /// <returns>All user notification entities.</returns>
+        public Task<IEnumerable<NotificationDataEntity>> GetSentNotificationsToUser(IEnumerable<string> userGroupIds);
     }
 }

@@ -7,7 +7,9 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
@@ -88,6 +90,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
                     IsDraft = false,
                     Teams = draftNotificationEntity.Teams,
                     Rosters = draftNotificationEntity.Rosters,
+                    TeamsGroups = draftNotificationEntity.TeamsGroups,
                     Groups = draftNotificationEntity.Groups,
                     AllUsers = draftNotificationEntity.AllUsers,
                     MessageVersion = draftNotificationEntity.MessageVersion,
@@ -211,6 +214,27 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
                 this.Logger.LogError(ex, ex.Message);
                 throw;
             }
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<NotificationDataEntity>> GetSentNotificationsToUser(IEnumerable<string> userGroupIds)
+        {
+            var statusFilter = TableQuery.GenerateFilterCondition("Status", QueryComparisons.Equal, "Sent");
+            var res = await this.GetWithFilterAsync(statusFilter, NotificationDataTableNames.SentNotificationsPartition);
+            var data = res.ToList();
+            var results = new List<NotificationDataEntity>();
+
+            results = data.FindAll(x => x.AllUsers == true);
+            foreach (var userGroupId in userGroupIds)
+            {
+                var notifications = data.FindAll(x => x.Groups.Contains(userGroupId) || x.TeamsGroups.Contains(userGroupId));
+                if (notifications != null)
+                {
+                    results = results.Union(notifications).ToList();
+                }
+            }
+
+            return results;
         }
 
         private string AppendNewLine(string originalString, string newString)
