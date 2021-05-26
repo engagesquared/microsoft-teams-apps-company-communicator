@@ -162,6 +162,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
             services.AddSingleton<ITeamDataRepository, TeamDataRepository>();
             services.AddSingleton<IUserDataRepository, UserDataRepository>();
             services.AddSingleton<ISentNotificationDataRepository, SentNotificationDataRepository>();
+            services.AddSingleton<ISendingNotificationDataRepository, SendingNotificationDataRepository>();
             services.AddSingleton<INotificationDataRepository, NotificationDataRepository>();
             services.AddSingleton<IExportDataRepository, ExportDataRepository>();
             services.AddSingleton<IAppConfigRepository, AppConfigRepository>();

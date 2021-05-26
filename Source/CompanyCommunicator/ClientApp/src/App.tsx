@@ -119,6 +119,7 @@ class App extends React.Component<{}, IAppState> {
                                 <Route exact path="/messages" component={TabContainer} />
                                 <Route exact path="/newmessage" component={NewMessage} />
                                 <Route exact path="/newmessage/:id" component={NewMessage} />
+                                <Route exact path="/editmessage/:id" component={NewMessage} />
                                 <Route exact path="/viewstatus/:id" component={StatusTaskModule} />
                                 <Route exact path="/sendconfirmation/:id" component={SendConfirmationTaskModule} />
                                 <Route exact path="/errorpage" component={ErrorPage} />

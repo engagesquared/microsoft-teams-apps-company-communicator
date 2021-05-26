@@ -96,3 +96,13 @@ export const getHistoryNotifications = async (): Promise<any> => {
     let url = `${baseAxiosUrl}/history`;
     return await axios.get(url);
 }
+
+export const updateNotification = async (payload: {}): Promise<any> => {
+    let url = baseAxiosUrl + "/sentNotifications";
+    return await axios.put(url, payload);
+}
+
+export const deleteNotification = async (id: string): Promise<any> => {
+    let url = baseAxiosUrl + "/sentNotifications/" + id;
+    return await axios.delete(url);
+}

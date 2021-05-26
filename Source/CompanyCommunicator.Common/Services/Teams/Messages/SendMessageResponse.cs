@@ -36,5 +36,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.Teams
         /// Gets or sets the error message when trying to send the notification.
         /// </summary>
         public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// Gets or sets the message chat id.
+        /// </summary>
+        public string MessageChatId { get; set; }
     }
 }

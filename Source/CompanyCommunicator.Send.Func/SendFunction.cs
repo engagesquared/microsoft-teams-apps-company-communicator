@@ -118,6 +118,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func
                 {
                     await this.notificationService.UpdateSentNotification(
                         notificationId: messageContent.NotificationId,
+                        messageChatId: string.Empty,
                         recipientId: messageContent.RecipientData.RecipientId,
                         totalNumberOfSendThrottles: 0,
                         statusCode: SentNotificationDataEntity.FinalFaultedStatusCode,
@@ -168,6 +169,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func
                 // Update sent notification table.
                 await this.notificationService.UpdateSentNotification(
                     notificationId: messageContent.NotificationId,
+                    messageChatId: string.Empty,
                     recipientId: messageContent.RecipientData.RecipientId,
                     totalNumberOfSendThrottles: 0,
                     statusCode: statusCode,
@@ -204,6 +206,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func
 
             await this.notificationService.UpdateSentNotification(
                     notificationId: messageContent.NotificationId,
+                    messageChatId: sendMessageResponse.MessageChatId,
                     recipientId: messageContent.RecipientData.RecipientId,
                     totalNumberOfSendThrottles: sendMessageResponse.TotalNumberOfSendThrottles,
                     statusCode: sendMessageResponse.StatusCode,

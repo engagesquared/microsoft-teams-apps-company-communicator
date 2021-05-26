@@ -32,6 +32,14 @@
     "supportsFiles": false,
     "isNotificationOnly": true
   }],
+  "staticTabs": [
+    {
+      "entityId": "a463cabc-e8f4-4c6c-a60b-52a03c6493b5",
+      "name": "History",
+      "contentUrl": "https://<<appDomain>>/history?locale=en-us",
+      "scopes": ["personal"]
+    }
+  ],
   "permissions": [
     "identity",
     "messageTeamMembers"

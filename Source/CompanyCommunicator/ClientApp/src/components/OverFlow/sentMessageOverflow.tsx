@@ -4,10 +4,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTranslation, WithTranslation } from "react-i18next";
-import { Menu, MoreIcon } from '@fluentui/react-northstar';
+import { Menu, MoreIcon, Loader } from '@fluentui/react-northstar';
 import { getBaseUrl } from '../../configVariables';
 import * as microsoftTeams from "@microsoft/teams-js";
-import { duplicateDraftNotification } from '../../apis/messageListApi';
+import { duplicateDraftNotification, deleteNotification } from '../../apis/messageListApi';
 import { selectMessage, getMessagesList, getDraftMessagesList } from '../../actions';
 import { TFunction } from "i18next";
 
@@ -22,6 +22,7 @@ export interface OverflowProps extends WithTranslation {
 
 export interface OverflowState {
     menuOpen: boolean;
+    isLoading: boolean;
 }
 
 export interface ITaskInfo {
@@ -41,6 +42,7 @@ class Overflow extends React.Component<OverflowProps, OverflowState> {
         this.localize = this.props.t;
         this.state = {
             menuOpen: false,
+            isLoading: false,
         };
     }
 
@@ -52,7 +54,7 @@ class Overflow extends React.Component<OverflowProps, OverflowState> {
         const items = [
             {
                 key: 'more',
-                icon: <MoreIcon outline={true} />,
+                icon: this.state.isLoading ? <Loader size="small" /> : <MoreIcon outline={true} />,
                 menuOpen: this.state.menuOpen,
                 active: this.state.menuOpen,
                 indicator: false,
@@ -68,6 +70,34 @@ class Overflow extends React.Component<OverflowProps, OverflowState> {
                                 });
                                 let url = getBaseUrl() + "/viewstatus/" + this.props.message.id + "?locale={locale}";
                                 this.onOpenTaskModule(null, url, this.localize("ViewStatus"));
+                            }
+                        },
+                        {
+                            key: 'edit',
+                            content: this.localize("Edit"),
+                            onClick: (event: any) => {
+                                event.stopPropagation();
+                                this.setState({
+                                    menuOpen: false,
+                                });
+                                let url = getBaseUrl() + "/editmessage/" + this.props.message.id + "?locale={locale}";
+                                this.onOpenTaskModule(null, url, this.localize("Edit"));
+                            }
+                        },
+                        {
+                            key: 'delete',
+                            content: this.localize("Delete"),
+                            onClick: async (event: any) => {
+                                event.stopPropagation();
+                                this.setState({
+                                    menuOpen: false,
+                                    isLoading: true,
+                                });
+                                await deleteNotification(this.props.message.id);
+                                await this.props.getMessagesList();
+                                this.setState({
+                                    isLoading: false,
+                                });
                             }
                         },
                         {
@@ -105,6 +135,7 @@ class Overflow extends React.Component<OverflowProps, OverflowState> {
             fallbackUrl: url,
         };
         let submitHandler = (err: any, result: any) => {
+            this.props.getMessagesList();
         };
         microsoftTeams.tasks.startTask(taskInfo, submitHandler);
     }

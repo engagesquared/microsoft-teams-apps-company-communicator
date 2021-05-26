@@ -11,7 +11,7 @@ import * as microsoftTeams from "@microsoft/teams-js";
 
 import './newMessage.scss';
 import './teamTheme.scss';
-import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess } from '../../apis/messageListApi';
+import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
     setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize
@@ -83,6 +83,8 @@ export interface formState {
     selectedGroups: dropdownItem[],
     errorImageUrlMessage: string,
     errorButtonUrlMessage: string,
+    isEditSentMessage: boolean,
+    submitIsLoading: boolean,
 }
 
 export interface INewMessageProps extends RouteComponentProps, WithTranslation {
@@ -133,6 +135,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             selectedGroups: [],
             errorImageUrlMessage: "",
             errorButtonUrlMessage: "",
+            isEditSentMessage: false,
+            submitIsLoading: false,
         }
     }
 
@@ -141,26 +145,31 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         //- Handle the Esc key
         document.addEventListener("keydown", this.escFunction, false);
         let params = this.props.match.params;
+        const isEditSentMessage = this.props.match.url.startsWith('/editmessage/');
         this.setGroupAccess();
         this.getTeamList().then(() => {
             if ('id' in params) {
                 let id = params['id'];
-                this.getItem(id).then(() => {
-                    const selectedTeams = this.makeDropdownItemList(this.state.selectedTeams, this.state.teams);
-                    const selectedRosters = this.makeDropdownItemList(this.state.selectedRosters, this.state.teams);
+                this.getItem(id, isEditSentMessage).then(() => {
+                    const selectedTeams = this.makeDropdownItemList(this.state.selectedTeams || [], this.state.teams || []);
+                    const selectedRosters = this.makeDropdownItemList(this.state.selectedRosters || [], this.state.teams || []);
                     this.setState({
                         exists: true,
                         messageId: id,
                         selectedTeams: selectedTeams,
                         selectedRosters: selectedRosters,
+                        isEditSentMessage,
                     })
                 });
-                this.getGroupData(id).then(() => {
-                    const selectedGroups = this.makeDropdownItems(this.state.groups);
-                    this.setState({
-                        selectedGroups: selectedGroups
-                    })
-                });
+                if (!isEditSentMessage) {
+                    this.getGroupData(id).then(() => {
+                        const selectedGroups = this.makeDropdownItems(this.state.groups);
+                        this.setState({
+                            selectedGroups: selectedGroups,
+                            isEditSentMessage,
+                        })
+                    });
+                }
             } else {
                 this.setState({
                     exists: false,
@@ -278,27 +287,32 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         }
     }
 
-    private getItem = async (id: number) => {
+    private getItem = async (id: number, isEditSentMessage: boolean) => {
         try {
-            const response = await getDraftNotification(id);
+            let response;
+            if (isEditSentMessage) {
+                response = await getSentNotification(id);
+            } else {
+                response = await getDraftNotification(id);
+            }
             const draftMessageDetail = response.data;
             let selectedRadioButton = "teams";
-            if (draftMessageDetail.rosters.length > 0) {
+            if (draftMessageDetail.rosters && draftMessageDetail.rosters.length > 0) {
                 selectedRadioButton = "rosters";
             }
-            else if (draftMessageDetail.groups.length > 0) {
+            else if (draftMessageDetail.groups && draftMessageDetail.groups.length > 0) {
                 selectedRadioButton = "groups";
             }
             else if (draftMessageDetail.allUsers) {
                 selectedRadioButton = "allUsers";
             }
             this.setState({
-                teamsOptionSelected: draftMessageDetail.teams.length > 0,
-                selectedTeamsNum: draftMessageDetail.teams.length,
-                rostersOptionSelected: draftMessageDetail.rosters.length > 0,
-                selectedRostersNum: draftMessageDetail.rosters.length,
-                groupsOptionSelected: draftMessageDetail.groups.length > 0,
-                selectedGroupsNum: draftMessageDetail.groups.length,
+                teamsOptionSelected: draftMessageDetail.teams && draftMessageDetail.teams.length > 0,
+                selectedTeamsNum: draftMessageDetail.teams && draftMessageDetail.teams.length,
+                rostersOptionSelected: draftMessageDetail.rosters && draftMessageDetail.rosters.length > 0,
+                selectedRostersNum: draftMessageDetail.rosters && draftMessageDetail.rosters.length,
+                groupsOptionSelected: draftMessageDetail.groups && draftMessageDetail.groups.length > 0,
+                selectedGroupsNum: draftMessageDetail.groups && draftMessageDetail.groups.length,
                 selectedRadioBtn: selectedRadioButton,
                 selectedTeams: draftMessageDetail.teams,
                 selectedRosters: draftMessageDetail.rosters,
@@ -492,7 +506,11 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
 
                             <Flex className="footerContainer" vAlign="end" hAlign="end">
                                 <Flex className="buttonContainer">
-                                    <Button content={this.localize("Next")} disabled={this.isNextBtnDisabled()} id="saveBtn" onClick={this.onNext} primary />
+                                    {this.state.isEditSentMessage ? 
+                                     this.state.submitIsLoading ? <Loader size="small" /> : <Button content={"Save"} id="saveBtn" onClick={this.onSave} primary />
+                                     : (
+                                        <Button content={this.localize("Next")} disabled={this.isNextBtnDisabled()} id="saveBtn" onClick={this.onNext} primary />
+                                    )}
                                 </Flex>
                             </Flex>
 
@@ -798,12 +816,18 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         const selctedRosters: string[] = [];
         const selctedTeamGroups: string[] = [];
         const selectedGroups: string[] = [];
-        this.state.selectedTeams.forEach(x => selectedTeams.push(x.team.id));
-        this.state.selectedRosters.forEach(x => {
-            selctedRosters.push(x.team.id);
-            selctedTeamGroups.push(x.team.teamGroupId);
-        });
-        this.state.selectedGroups.forEach(x => selectedGroups.push(x.team.id));
+        if (this.state.selectedTeams) {
+            this.state.selectedTeams.forEach(x => selectedTeams.push(x.team.id));
+        }
+        if (this.state.selectedRosters) {
+            this.state.selectedRosters.forEach(x => {
+                selctedRosters.push(x.team.id);
+                selctedTeamGroups.push(x.team.teamGroupId);
+            });
+        }
+        if (this.state.selectedGroups) {
+            this.state.selectedGroups.forEach(x => selectedGroups.push(x.team.id));
+        }
 
         const draftMessage: IDraftMessage = {
             id: this.state.messageId,
@@ -823,7 +847,13 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             allUsers: this.state.allUsersOptionSelected
         };
 
-        if (this.state.exists) {
+        if (this.state.isEditSentMessage) {
+            this.setState({ submitIsLoading: true });
+            this.editSentMessage(draftMessage).then(() => {
+                this.setState({ submitIsLoading: false });
+                microsoftTeams.tasks.submitTask();
+            });
+        } else if (this.state.exists) {
             this.editDraftMessage(draftMessage).then(() => {
                 microsoftTeams.tasks.submitTask();
             });
@@ -831,6 +861,14 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             this.postDraftMessage(draftMessage).then(() => {
                 microsoftTeams.tasks.submitTask();
             });
+        }
+    }
+
+    private editSentMessage = async (draftMessage: IDraftMessage) => {
+        try {
+            await updateNotification(draftMessage);
+        } catch (error) {
+            return error;
         }
     }
 

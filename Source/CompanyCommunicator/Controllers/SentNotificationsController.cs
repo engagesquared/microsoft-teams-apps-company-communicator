@@ -9,9 +9,14 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
     using System.Collections.Generic;
     using System.Linq;
     using System.Security.Claims;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Azure.Cosmos.Table;
+    using Microsoft.Bot.Builder;
+    using Microsoft.Bot.Builder.Integration.AspNet.Core;
+    using Microsoft.Bot.Schema;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.Graph;
@@ -35,6 +40,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
     [Route("api/sentNotifications")]
     public class SentNotificationsController : ControllerBase
     {
+        private static readonly string AdaptiveCardContentType = "application/vnd.microsoft.card.adaptive";
         private readonly INotificationDataRepository notificationDataRepository;
         private readonly ISentNotificationDataRepository sentNotificationDataRepository;
         private readonly ITeamDataRepository teamDataRepository;
@@ -47,6 +53,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
         private readonly IAppSettingsService appSettingsService;
         private readonly UserAppOptions userAppOptions;
         private readonly ILogger<SentNotificationsController> logger;
+        private readonly string microsoftAppId;
+        private readonly BotFrameworkHttpAdapter botAdapter;
+        private readonly Common.Services.AdaptiveCard.AdaptiveCardCreator adaptiveCardCreator;
+        private readonly ISendingNotificationDataRepository sendingNotificationDataRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SentNotificationsController"/> class.
@@ -66,6 +76,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
         public SentNotificationsController(
             INotificationDataRepository notificationDataRepository,
             ISentNotificationDataRepository sentNotificationDataRepository,
+            ISendingNotificationDataRepository notificationRepo,
             ITeamDataRepository teamDataRepository,
             IPrepareToSendQueue prepareToSendQueue,
             IDataQueue dataQueue,
@@ -75,15 +86,22 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
             IAppCatalogService appCatalogService,
             IAppSettingsService appSettingsService,
             IOptions<UserAppOptions> userAppOptions,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IOptions<Common.Services.CommonBot.BotOptions> botOptions,
+            BotFrameworkHttpAdapter botAdapter,
+            Common.Services.AdaptiveCard.AdaptiveCardCreator cardCreator)
         {
             if (dataQueueMessageOptions is null)
             {
                 throw new ArgumentNullException(nameof(dataQueueMessageOptions));
             }
 
+            this.microsoftAppId = botOptions?.Value?.UserAppId ?? throw new ArgumentNullException(nameof(botOptions));
+            this.botAdapter = botAdapter ?? throw new ArgumentNullException(nameof(botAdapter));
+            this.adaptiveCardCreator = cardCreator ?? throw new ArgumentNullException(nameof(cardCreator));
             this.notificationDataRepository = notificationDataRepository ?? throw new ArgumentNullException(nameof(notificationDataRepository));
             this.sentNotificationDataRepository = sentNotificationDataRepository ?? throw new ArgumentNullException(nameof(sentNotificationDataRepository));
+            this.sendingNotificationDataRepository = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
             this.teamDataRepository = teamDataRepository ?? throw new ArgumentNullException(nameof(teamDataRepository));
             this.prepareToSendQueue = prepareToSendQueue ?? throw new ArgumentNullException(nameof(prepareToSendQueue));
             this.dataQueue = dataQueue ?? throw new ArgumentNullException(nameof(dataQueue));
@@ -237,6 +255,165 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
             };
 
             return this.Ok(result);
+        }
+
+        /// <summary>
+        /// Update an existing notification.
+        /// </summary>
+        /// <param name="notification">An existing Notification to be updated.</param>
+        /// <returns>A task that represents the work queued to execute.</returns>
+        [HttpPut]
+        public async Task<IActionResult> UpdateNotificationAsync([FromBody] NotificationDataEntity notification)
+        {
+            var filter = TableQuery.GenerateFilterCondition("DeliveryStatus", QueryComparisons.Equal, "Succeeded");
+            var sentMessages = await this.sentNotificationDataRepository.GetWithFilterAsync(filter, notification.Id);
+
+            if (sentMessages != null && sentMessages.Count() > 0)
+            {
+                foreach (var message in sentMessages)
+                {
+                    var conversationReference = new ConversationReference
+                    {
+                        ServiceUrl = message.ServiceUrl,
+                        Conversation = new ConversationAccount
+                        {
+                            Id = message.ConversationId,
+                        },
+                    };
+
+                    var card = this.adaptiveCardCreator.CreateAdaptiveCard(notification);
+                    await this.botAdapter.ContinueConversationAsync(
+                        botAppId: this.microsoftAppId,
+                        reference: conversationReference,
+                        callback: async (turnContext, cancellationToken) =>
+                        {
+                            var adaptiveCardAttachment = new Microsoft.Bot.Schema.Attachment()
+                            {
+                                ContentType = AdaptiveCardContentType,
+                                Content = card,
+                            };
+
+                            var activity = MessageFactory.Attachment(adaptiveCardAttachment);
+                            activity.Id = message.MessageChatId;
+                            await turnContext.UpdateActivityAsync(activity);
+                        },
+                        cancellationToken: CancellationToken.None);
+
+                    var sendingNotification = await this.sendingNotificationDataRepository.GetAsync(NotificationDataTableNames.SendingNotificationsPartition, notification.Id);
+                    if (sendingNotification != null)
+                    {
+                        var notificationEntity = new SendingNotificationDataEntity
+                        {
+                            PartitionKey = NotificationDataTableNames.SendingNotificationsPartition,
+                            RowKey = notification.Id,
+                            NotificationId = notification.Id,
+                            Content = card.ToJson(),
+                        };
+                        await this.sendingNotificationDataRepository.CreateOrUpdateAsync(notificationEntity);
+                    }
+
+                    var sentNotification = await this.notificationDataRepository.GetAsync(NotificationDataTableNames.SentNotificationsPartition, notification.Id);
+                    if (sentNotification != null)
+                    {
+                        var notificationEntity = new NotificationDataEntity
+                        {
+                            PartitionKey = NotificationDataTableNames.SentNotificationsPartition,
+                            RowKey = notification.Id,
+                            Id = notification.Id,
+                            Title = notification.Title,
+                            ImageLink = notification.ImageLink,
+                            ImageSize = notification.ImageSize,
+                            ImageHeight = notification.ImageHeight,
+                            ImageWidth = notification.ImageWidth,
+                            Summary = notification.Summary,
+                            Author = notification.Author,
+                            ButtonTitle = notification.ButtonTitle,
+                            ButtonLink = notification.ButtonLink,
+                            CreatedBy = this.HttpContext.User?.Identity?.Name,
+                            CreatedDate = DateTime.UtcNow,
+                            IsDraft = true,
+                            Teams = notification.Teams,
+                            Rosters = notification.Rosters,
+                            Groups = notification.Groups,
+                            AllUsers = notification.AllUsers,
+                            TotalMessageCount = sentNotification.TotalMessageCount,
+                            Failed = sentNotification.Failed,
+                            Succeeded = sentNotification.Succeeded,
+                            Unknown = sentNotification.Unknown,
+                            SendingStartedDate = sentNotification.SendingStartedDate,
+                            SentDate = sentNotification.SentDate,
+                            Status = sentNotification.Status,
+                        };
+                        await this.notificationDataRepository.CreateOrUpdateAsync(notificationEntity);
+                    }
+                }
+            }
+
+            return this.Ok();
+        }
+
+        /// <summary>
+        /// Delete an existing notification.
+        /// </summary>
+        /// <param name="id">The id of the notification to be deleted.</param>
+        /// <returns>If the passed in Id is invalid, it returns 404 not found error. Otherwise, it returns 200 OK.</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotificationAsync(string id)
+        {
+            var filter = TableQuery.GenerateFilterCondition("DeliveryStatus", QueryComparisons.Equal, "Succeeded");
+            var sentMessages = await this.sentNotificationDataRepository.GetWithFilterAsync(filter, id);
+
+            if (sentMessages != null && sentMessages.Count() > 0)
+            {
+                foreach (var message in sentMessages)
+                {
+                    var conversationReference = new ConversationReference
+                    {
+                        ServiceUrl = message.ServiceUrl,
+                        Conversation = new ConversationAccount
+                        {
+                            Id = message.ConversationId,
+                        },
+                    };
+                    await this.botAdapter.ContinueConversationAsync(
+                        botAppId: this.microsoftAppId,
+                        reference: conversationReference,
+                        callback: async (turnContext, cancellationToken) =>
+                        {
+                            await turnContext.DeleteActivityAsync(message.MessageChatId);
+                        },
+                        cancellationToken: CancellationToken.None);
+                }
+            }
+
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            var sentNotificationEntity = await this.notificationDataRepository.GetAsync(
+                NotificationDataTableNames.SentNotificationsPartition,
+                id);
+            if (sentNotificationEntity != null)
+            {
+                await this.notificationDataRepository.DeleteAsync(sentNotificationEntity);
+            }
+
+            var sendingNotificationEntity = await this.notificationDataRepository.GetAsync(
+                NotificationDataTableNames.SendingNotificationsPartition,
+                id);
+            if (sendingNotificationEntity != null)
+            {
+                await this.notificationDataRepository.DeleteAsync(sendingNotificationEntity);
+            }
+
+            var sentNotificationEntities = await this.sentNotificationDataRepository.GetAllAsync(id);
+            foreach (var notification in sentNotificationEntities)
+            {
+                await this.sentNotificationDataRepository.DeleteAsync(notification);
+            }
+
+            return this.Ok();
         }
 
         private int? GetUnknownCount(NotificationDataEntity notificationEntity)

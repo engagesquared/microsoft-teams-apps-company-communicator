@@ -91,9 +91,14 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.Teams
                     try
                     {
                         // Send message.
-                        await policy.ExecuteAsync(async () => await turnContext.SendActivityAsync(message));
+                        await policy.ExecuteAsync(async () =>
+                        {
+                            var res = await turnContext.SendActivityAsync(message);
+                            return res;
+                        });
 
                         // Success.
+                        response.MessageChatId = message.Id;
                         response.ResultType = SendMessageResult.Succeeded;
                         response.StatusCode = (int)HttpStatusCode.Created;
                         response.AllSendStatusCodes += $"{(int)HttpStatusCode.Created},";

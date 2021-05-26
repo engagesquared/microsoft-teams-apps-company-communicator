@@ -89,6 +89,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func.Services
         /// <inheritdoc/>
         public async Task UpdateSentNotification(
             string notificationId,
+            string messageChatId,
             string recipientId,
             int totalNumberOfSendThrottles,
             int statusCode,
@@ -110,6 +111,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func.Services
             notification.ErrorMessage = errorMessage;
             notification.NumberOfFunctionAttemptsToSend = notification.NumberOfFunctionAttemptsToSend + 1;
             notification.AllSendStatusCodes = $"{notification.AllSendStatusCodes ?? string.Empty}{allSendStatusCodes}";
+            notification.MessageChatId = messageChatId;
 
             if (statusCode == (int)HttpStatusCode.Created)
             {
