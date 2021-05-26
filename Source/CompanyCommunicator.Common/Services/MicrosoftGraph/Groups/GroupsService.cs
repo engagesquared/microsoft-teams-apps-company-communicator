@@ -191,20 +191,19 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         /// </summary>
         /// <param name="userAadId">user id.</param>
         /// <returns>list of group.</returns>
-        public async Task<IUserTransitiveMemberOfCollectionWithReferencesPage> GetUserGroups(string userAadId)
+        public async Task<IEnumerable<DirectoryObject>> GetUserGroups(string userAadId)
         {
-            var url = this.graphServiceClient.Users[userAadId].TransitiveMemberOf.AppendSegmentToRequestUrl("microsoft.graph.group");
-            var groupsRequest = new UserTransitiveMemberOfCollectionWithReferencesRequestBuilder(url, this.graphServiceClient);
-            var groups = await groupsRequest
-                                        .Request()
-                                        .WithMaxRetry(this.MaxRetry)
-                                        .Select(team => new
-                                        {
-                                            team.Id,
-                                        })
-                                        .Header(Common.Constants.PermissionTypeKey, GraphPermissionType.Delegate.ToString()) // Team.ReadBasic.All
-                                        .GetAsync();
-            return groups;
+            var groups = await this.graphServiceClient.Users[userAadId].TransitiveMemberOf
+                                                                                        .Request()
+                                                                                        .WithMaxRetry(this.MaxRetry)
+                                                                                        .Select(team => new
+                                                                                        {
+                                                                                            team.Id,
+                                                                                        })
+                                                                                        .Header(Common.Constants.PermissionTypeKey, GraphPermissionType.Delegate.ToString())
+                                                                                        .GetAsync();
+            var results = groups.Where(x => x.ODataType == "#microsoft.graph.group");
+            return results;
         }
     }
 }

@@ -44,6 +44,10 @@
     "identity",
     "messageTeamMembers"
   ],
+  "webApplicationInfo": {
+    "id": "<<botId>>",
+    "resource": "api://<<appDomain>>"
+  },
   "validDomains": [
     "<<appDomain>>"
   ]

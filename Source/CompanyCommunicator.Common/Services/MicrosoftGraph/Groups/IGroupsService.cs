@@ -40,6 +40,6 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         /// </summary>
         /// <param name="userAadId">user id.</param>
         /// <returns>list of group.</returns>
-        Task<IUserTransitiveMemberOfCollectionWithReferencesPage> GetUserGroups(string userAadId);
+        Task<IEnumerable<DirectoryObject>> GetUserGroups(string userAadId);
     }
 }
