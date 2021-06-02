@@ -21,9 +21,11 @@ When you're ready to try out Company Communicator, or to use it in your own orga
 
 ## Legal notice
 
+This is a customised version of the Company Communicator App Template, and is subject to the same legal terms as the original application.
+
 This app template is provided under the [MIT License](https://github.com/engagesquared/microsoft-teams-apps-company-communicator/blob/master/LICENSE) terms.  In addition to these terms, by using this app template you agree to the following:
 
-- You, not Microsoft, will license the use of your app to users or organization. 
+- You, not Engage Squared, will license the use of your app to users or organization. 
 
 - This app template is not intended to substitute your own regulatory due diligence or make you or your app compliant with respect to any applicable regulations, including but not limited to privacy, healthcare, employment, or financial regulations.
 
