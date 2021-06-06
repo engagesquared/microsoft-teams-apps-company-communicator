@@ -38,6 +38,12 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         }
 
         /// <inheritdoc/>
+        public IDriveItemsService GetDriveItemsService()
+        {
+            return new DriveItemsService(this.serviceClient);
+        }
+
+        /// <inheritdoc/>
         public IGroupMembersService GetGroupMembersService()
         {
             return new GroupMembersService(this.serviceClient);

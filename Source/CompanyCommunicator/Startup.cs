@@ -122,6 +122,15 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
                         configuration.GetValue<string>("UserAppExternalId", "148a66bb-e83d-425a-927d-09f4299a9274");
                 });
 
+            services.AddOptions<PublicCDNOptions>()
+                .Configure<IConfiguration>((options, configuration) =>
+                {
+                    options.SharepointHostName = configuration.GetValue<string>("SharepointHostName");
+                    options.SiteId = configuration.GetValue<string>("PublicCDNSiteId");
+                    options.WebId = configuration.GetValue<string>("PublicCDNWebId");
+                    options.LibraryId = configuration.GetValue<string>("PublicCDNListId");
+                });
+
             services.AddOptions();
 
             // Add localization services.
@@ -180,6 +189,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
             services.AddScoped<IGraphServiceClient, GraphServiceClient>();
             services.AddScoped<IGraphServiceFactory, GraphServiceFactory>();
             services.AddScoped<IGroupsService>(sp => sp.GetRequiredService<IGraphServiceFactory>().GetGroupsService());
+            services.AddScoped<IDriveItemsService>(sp => sp.GetRequiredService<IGraphServiceFactory>().GetDriveItemsService());
             services.AddScoped<IAppCatalogService>(sp => sp.GetRequiredService<IGraphServiceFactory>().GetAppCatalogService());
 
             // Add Application Insights telemetry.

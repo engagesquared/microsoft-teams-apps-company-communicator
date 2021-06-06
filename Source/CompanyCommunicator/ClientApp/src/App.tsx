@@ -19,11 +19,16 @@ import SignInSimpleStart from "./components/SignInPage/signInSimpleStart";
 import SignInSimpleEnd from "./components/SignInPage/signInSimpleEnd";
 import { updateLocale } from './i18n';
 import i18n from 'i18next';
+import { Providers, TeamsHelper } from "@microsoft/mgt-react";
+import { MgtTokenProvider } from "./providers/MgtTokenProvider";
 
 export interface IAppState {
     theme: string;
     themeStyle: number;
 }
+
+TeamsHelper.microsoftTeamsLib = microsoftTeams;
+Providers.globalProvider = new MgtTokenProvider();
 
 class App extends React.Component<{}, IAppState> {
 

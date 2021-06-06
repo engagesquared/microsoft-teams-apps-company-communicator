@@ -996,5 +996,8 @@ function logout {
 # Open manifest folder
     Invoke-Item ..\Manifest\
 
+# Provisioning Public CDN
+    .\publicCDN.ps1
+
 # Deployment completed.
     Write-Ascii -InputObject "DEPLOYMENT COMPLETED." -ForegroundColor Green

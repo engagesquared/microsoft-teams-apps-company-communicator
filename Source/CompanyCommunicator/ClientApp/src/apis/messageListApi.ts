@@ -106,3 +106,23 @@ export const deleteNotification = async (id: string): Promise<any> => {
     let url = baseAxiosUrl + "/sentNotifications/" + id;
     return await axios.delete(url);
 }
+
+export const getAccessToken = async (): Promise<string> => {
+    let url = baseAxiosUrl + "/user/getToken";
+    const response = await axios.get(url);
+    return response.data as string;
+};
+
+export const getPublicCDNOptions = async (): Promise<any> => {
+    let url = baseAxiosUrl + "/publicCDN/options";
+    const response = await axios.get(url);
+    return response.data;
+};
+
+export const uploadFileToCDN = async (file: any): Promise<any> => {
+    let url = baseAxiosUrl + "/publicCDN/content";
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    const response = await axios.post(url, formData);
+    return response.data;
+};

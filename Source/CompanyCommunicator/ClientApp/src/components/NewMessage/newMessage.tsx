@@ -6,12 +6,12 @@ import { RouteComponentProps } from 'react-router-dom';
 import { withTranslation, WithTranslation } from "react-i18next";
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import * as AdaptiveCards from "adaptivecards";
-import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup, DropdownProps, Slider } from '@fluentui/react-northstar'
+import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup, DropdownProps, Slider, SplitButton, Dialog, Ref } from '@fluentui/react-northstar'
 import * as microsoftTeams from "@microsoft/teams-js";
 
 import './newMessage.scss';
 import './teamTheme.scss';
-import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification } from '../../apis/messageListApi';
+import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification, getPublicCDNOptions, uploadFileToCDN } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
     setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize
@@ -19,6 +19,7 @@ import {
 import { getBaseUrl } from '../../configVariables';
 import { ImageUtil } from '../../utility/imageutility';
 import { TFunction } from "i18next";
+import { FileList } from '@microsoft/mgt-react';
 
 type dropdownItem = {
     key: string,
@@ -85,6 +86,9 @@ export interface formState {
     errorButtonUrlMessage: string,
     isEditSentMessage: boolean,
     submitIsLoading: boolean,
+    openSelectImageDialog: boolean,
+    publicCDNOptions: any,
+    forceUpdateIndex: number,
 }
 
 export interface INewMessageProps extends RouteComponentProps, WithTranslation {
@@ -94,6 +98,7 @@ export interface INewMessageProps extends RouteComponentProps, WithTranslation {
 class NewMessage extends React.Component<INewMessageProps, formState> {
     readonly localize: TFunction;
     private card: any;
+    private fileUploadRef: any;
     private ratio: number = 1;
     private imageMaxWidth: number = 400;
     private imageMinWidth: number = 1;
@@ -106,6 +111,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         this.localize = this.props.t;
         this.card = getInitAdaptiveCard(this.localize);
         this.setDefaultCard(this.card);
+        this.fileUploadRef = React.createRef();
 
         this.state = {
             title: "",
@@ -137,6 +143,9 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             errorButtonUrlMessage: "",
             isEditSentMessage: false,
             submitIsLoading: false,
+            openSelectImageDialog: false,
+            publicCDNOptions: {},
+            forceUpdateIndex: 0,
         }
     }
 
@@ -186,6 +195,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 })
             }
         });
+        const publicCDNOptions = await getPublicCDNOptions();
+        this.setState({ publicCDNOptions });
     }
 
     private makeDropdownItems = (items: any[] | undefined) => {
@@ -378,15 +389,59 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                             autoComplete="off"
                                             fluid
                                         />
-
-                                        <Input fluid className="inputField"
-                                            value={this.state.imageLink}
-                                            label={this.localize("ImageURL")}
-                                            placeholder={this.localize("ImageURL")}
-                                            onChange={this.onImageLinkChanged}
-                                            error={!(this.state.errorImageUrlMessage === "")}
-                                            autoComplete="off"
-                                        />
+                                        <Flex vAlign="end" gap="gap.medium">
+                                            <Input fluid className="inputField"
+                                                value={this.state.imageLink}
+                                                label={this.localize("ImageURL")}
+                                                placeholder={this.localize("ImageURL")}
+                                                onChange={this.onImageLinkChanged}
+                                                error={!(this.state.errorImageUrlMessage === "")}
+                                                autoComplete="off"
+                                            />
+                                            <Ref innerRef={this.fileUploadRef}>
+                                                <Input
+                                                    type="file"
+                                                    onChange={this.onUploadImage}
+                                                    hidden
+                                                />
+                                            </Ref>
+                                            <SplitButton
+                                                menu={[
+                                                    {
+                                                        key: 'uploadImage',
+                                                        content: "Upload",
+                                                    }
+                                                ]}
+                                                button={{
+                                                    content: 'Select'
+                                                }}
+                                                onMainButtonClick={() => {
+                                                    this.setState({ openSelectImageDialog: true, forceUpdateIndex: this.state.forceUpdateIndex + 1 });
+                                                }}
+                                                onMenuItemClick={() => this.fileUploadRef.current.click()}
+                                            />
+                                            <Dialog
+                                                cancelButton="Cancel"
+                                                confirmButton="Select"
+                                                header="Select Image"
+                                                content={
+                                                    <div className="mgtFileListContainer">
+                                                        <FileList
+                                                            fileListQuery={`/sites/${this.state.publicCDNOptions.sharepointHostName}.sharepoint.com,${this.state.publicCDNOptions.siteId},${this.state.publicCDNOptions.webId}/lists/${this.state.publicCDNOptions.libraryId}/drive/root/children?a=${this.state.forceUpdateIndex}`}
+                                                            itemClick={(event: any) => {
+                                                                if (event) {
+                                                                    this.onImageLinkChanged(event);
+                                                                    this.setState({ openSelectImageDialog: false })
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                }
+                                                open={this.state.openSelectImageDialog}
+                                                onCancel={() => this.setState({ openSelectImageDialog: false })}
+                                                onConfirm={() => this.setState({ openSelectImageDialog: false })}
+                                            />
+                                        </Flex>
                                         {this.state.imageLink && !this.state.errorImageUrlMessage ? (
                                             <>
                                                 <div className="imageSizeContainer">
@@ -928,8 +983,24 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
         });
     }
 
+    private onUploadImage = async (e: any) => {
+        if (!(e.target && e.target.files && e.target.files[0])) {
+            return;
+        }
+
+        const url = await uploadFileToCDN(e.target.files[0]);
+        this.onImageLinkChanged(url)
+    }
+
     private onImageLinkChanged = async (event: any) => {
-        let url = event.target.value.toLowerCase();
+        let url = "";
+        if (event && event.target && event.target.value) {
+            url = event.target.value.toLowerCase()
+        } else if (event && event.detail && event.detail.webUrl) {
+            url = event.detail.webUrl
+        } else if (typeof event === "string" && event) {
+            url = event;
+        }
         if (url === "") {
             this.setState({
                 imageSize: ""

@@ -1,0 +1,34 @@
+{
+    "adminLogin": {
+      "Value": "<<value>>",
+      "Description": "Tenant administrator login."
+    },
+    "password": {
+      "Value": "<<value>>",
+      "Description": "Tenant administrator login password."
+    },
+    "tenantAdminUrl": {
+      "Value": "<<value>>",
+      "Description": "Tenant admin absolute url (https://[contoso]-admin.sharepoint.com)."
+    },
+    "publicCDNSiteUrl": {
+      "Value": "<<value>>",
+      "Description": "The absolute URL of the site that contains / will contain the organization's asset libraries. If you already have your organization's asset libraries, provide the absolute URL of the site where they are located."
+    },
+    "publicCDNSiteTitle": {
+      "Value": "Public CDN",
+      "Description": "The title of the site that will contain the organization's asset libraries."
+    },
+    "orgAssetsLibraryTitle": {
+      "Value": "Company Communicator Images",
+      "Description": "The name of organization's asset library."
+    },
+    "resourceGroupName": {
+      "Value": "<<value>>",
+      "Description": "The name of azure resource group."
+    },
+    "appServiceName": {
+      "Value": "<<value>>",
+      "Description": "The name of azure app service."
+    }
+}

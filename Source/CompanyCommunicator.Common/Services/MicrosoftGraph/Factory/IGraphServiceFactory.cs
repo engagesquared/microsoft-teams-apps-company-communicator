@@ -23,6 +23,12 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         public IGroupsService GetGroupsService();
 
         /// <summary>
+        /// Creates an instance of <see cref="IDriveItemsService"/> implementation.
+        /// </summary>
+        /// <returns>Returns an implementation of <see cref="IDriveItemsService"/>.</returns>
+        public IDriveItemsService GetDriveItemsService();
+
+        /// <summary>
         /// Creates an instance of <see cref="IGroupMembersService"/> implementation.
         /// </summary>
         /// <returns>Returns in implementation of <see cref="IGroupMembersService"/>.</returns>
