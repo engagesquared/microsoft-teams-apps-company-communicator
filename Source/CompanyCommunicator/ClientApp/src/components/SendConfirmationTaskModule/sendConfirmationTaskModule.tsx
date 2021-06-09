@@ -12,7 +12,7 @@ import './sendConfirmationTaskModule.scss';
 import { getDraftNotification, getConsentSummaries, sendDraftNotification } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
-    setCardAuthor, setCardBtn, setCardImageSize, setCardImageHeight, setCardImageWidth
+    setCardAuthor, setCardBtn, setCardImageSize, setCardImageHeight, setCardImageWidth, setCardImportant
 } from '../AdaptiveCard/adaptiveCard';
 import { ImageUtil } from '../../utility/imageutility';
 import { TFunction } from "i18next";
@@ -40,6 +40,7 @@ export interface IMessage {
     author?: string;
     buttonLink?: string;
     buttonTitle?: string;
+    isImportant?: boolean;
 }
 
 export interface SendConfirmationTaskModuleProps extends RouteComponentProps, WithTranslation {
@@ -99,6 +100,7 @@ class SendConfirmationTaskModule extends React.Component<SendConfirmationTaskMod
                         this.setState({
                             loader: false
                         }, () => {
+                            setCardImportant(this.card, this.state.message.isImportant || false);
                             setCardTitle(this.card, this.state.message.title);
                             setCardImageLink(this.card, this.state.message.imageLink);
                             setCardImageSize(this.card, this.state.message.imageSize || "");

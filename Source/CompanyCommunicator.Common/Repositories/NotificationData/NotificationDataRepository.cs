@@ -93,6 +93,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
                     TeamsGroups = draftNotificationEntity.TeamsGroups,
                     Groups = draftNotificationEntity.Groups,
                     AllUsers = draftNotificationEntity.AllUsers,
+                    EnableReplies = draftNotificationEntity.EnableReplies,
+                    IsImportant = draftNotificationEntity.IsImportant,
                     MessageVersion = draftNotificationEntity.MessageVersion,
                     Succeeded = 0,
                     Failed = 0,

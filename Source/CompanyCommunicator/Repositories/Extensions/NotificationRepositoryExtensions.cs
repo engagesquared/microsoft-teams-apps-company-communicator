@@ -51,6 +51,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Repositories.Extensions
                 Groups = notification.Groups,
                 TeamsGroups = notification.TeamsGroups,
                 AllUsers = notification.AllUsers,
+                EnableReplies = notification.EnableReplies,
+                IsImportant = notification.IsImportant,
             };
 
             await notificationRepository.CreateOrUpdateAsync(notificationEntity);

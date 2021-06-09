@@ -39,6 +39,10 @@
     "Value": "true",
     "Description": "If proactive app installation should be enabled. Default is true. If enabled, the application will proactively install the User bot for recipients."
   },
+  "enableReplyFunctionality": {
+    "Value": "false",
+    "Description": "Enables a message reply functionality for user application. Default is false."
+  },
   "userAppExternalId": {
     "Value": "148a66bb-e83d-425a-927d-09f4299a9274",
     "Description": "User app external ID."

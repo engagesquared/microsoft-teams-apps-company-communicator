@@ -7,7 +7,7 @@ import { withTranslation, WithTranslation } from "react-i18next";
 import { Menu, MoreIcon, Loader } from '@fluentui/react-northstar';
 import { getBaseUrl } from '../../configVariables';
 import * as microsoftTeams from "@microsoft/teams-js";
-import { duplicateDraftNotification, deleteNotification } from '../../apis/messageListApi';
+import { duplicateDraftNotification, deleteNotification, downloadReplies } from '../../apis/messageListApi';
 import { selectMessage, getMessagesList, getDraftMessagesList } from '../../actions';
 import { TFunction } from "i18next";
 
@@ -122,7 +122,26 @@ class Overflow extends React.Component<OverflowProps, OverflowState> {
                 },
             },
         ];
-
+        if (this.props.message && this.props.message.id && this.props.message.repliesCount) {
+            items[0].menu.items.push({
+                key: 'downloadReplies',
+                content: "Export message replies",
+                onClick: async (event: any) => {
+                    event.stopPropagation();
+                    this.setState({
+                        menuOpen: false,
+                    });
+                    var res = await downloadReplies(this.props.message.id);
+                    const url = window.URL.createObjectURL(new Blob([atob(res.fileContents)]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', res.fileDownloadName);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }
+            } as any)
+        }
         return <Menu className="menuContainer" iconOnly items={items} styles={this.props.styles} title={this.props.title} />;
     }
 

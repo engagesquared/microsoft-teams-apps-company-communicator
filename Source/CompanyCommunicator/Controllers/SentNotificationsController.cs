@@ -24,6 +24,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Extensions;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.ExportData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.NotificationData;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.RepliesData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.SentNotificationData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.TeamData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services;
@@ -57,6 +58,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
         private readonly BotFrameworkHttpAdapter botAdapter;
         private readonly Common.Services.AdaptiveCard.AdaptiveCardCreator adaptiveCardCreator;
         private readonly ISendingNotificationDataRepository sendingNotificationDataRepository;
+        private readonly IReplyDataRepository replyDataRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SentNotificationsController"/> class.
@@ -89,7 +91,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
             ILoggerFactory loggerFactory,
             IOptions<Common.Services.CommonBot.BotOptions> botOptions,
             BotFrameworkHttpAdapter botAdapter,
-            Common.Services.AdaptiveCard.AdaptiveCardCreator cardCreator)
+            Common.Services.AdaptiveCard.AdaptiveCardCreator cardCreator,
+            IReplyDataRepository replyDataRepository)
         {
             if (dataQueueMessageOptions is null)
             {
@@ -101,6 +104,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
             this.adaptiveCardCreator = cardCreator ?? throw new ArgumentNullException(nameof(cardCreator));
             this.notificationDataRepository = notificationDataRepository ?? throw new ArgumentNullException(nameof(notificationDataRepository));
             this.sentNotificationDataRepository = sentNotificationDataRepository ?? throw new ArgumentNullException(nameof(sentNotificationDataRepository));
+            this.replyDataRepository = replyDataRepository ?? throw new ArgumentNullException(nameof(replyDataRepository));
             this.sendingNotificationDataRepository = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
             this.teamDataRepository = teamDataRepository ?? throw new ArgumentNullException(nameof(teamDataRepository));
             this.prepareToSendQueue = prepareToSendQueue ?? throw new ArgumentNullException(nameof(prepareToSendQueue));
@@ -177,6 +181,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
             var result = new List<SentNotificationSummary>();
             foreach (var notificationEntity in notificationEntities)
             {
+                var replies = await this.replyDataRepository.GetAllRepliesByNotificationId(notificationEntity.Id);
                 var summary = new SentNotificationSummary
                 {
                     Id = notificationEntity.Id,
@@ -189,6 +194,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                     TotalMessageCount = notificationEntity.TotalMessageCount,
                     SendingStartedDate = notificationEntity.SendingStartedDate,
                     Status = notificationEntity.GetStatus(),
+                    RepliesCount = replies.Count(),
                 };
 
                 result.Add(summary);
@@ -247,6 +253,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                 RosterNames = await this.teamDataRepository.GetTeamNamesByIdsAsync(notificationEntity.Rosters),
                 GroupNames = groupNames,
                 AllUsers = notificationEntity.AllUsers,
+                EnableReplies = notificationEntity.EnableReplies,
+                IsImportant = notificationEntity.IsImportant,
                 SendingStartedDate = notificationEntity.SendingStartedDate,
                 ErrorMessage = notificationEntity.ErrorMessage,
                 WarningMessage = notificationEntity.WarningMessage,
@@ -308,6 +316,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                             RowKey = notification.Id,
                             NotificationId = notification.Id,
                             Content = card.ToJson(),
+                            EnableReplies = notification.EnableReplies,
+                            IsImportant = notification.IsImportant,
                         };
                         await this.sendingNotificationDataRepository.CreateOrUpdateAsync(notificationEntity);
                     }
@@ -336,6 +346,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                             Rosters = notification.Rosters,
                             Groups = notification.Groups,
                             AllUsers = notification.AllUsers,
+                            EnableReplies = notification.EnableReplies,
+                            IsImportant = notification.IsImportant,
                             TotalMessageCount = sentNotification.TotalMessageCount,
                             Failed = sentNotification.Failed,
                             Succeeded = sentNotification.Succeeded,

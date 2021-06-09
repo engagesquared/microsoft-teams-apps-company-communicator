@@ -24,6 +24,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.ExportData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.NotificationData;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.RepliesData;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.ReplyData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.SentNotificationData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.TeamData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.UserData;
@@ -122,6 +124,12 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
                         configuration.GetValue<string>("UserAppExternalId", "148a66bb-e83d-425a-927d-09f4299a9274");
                 });
 
+            services.AddOptions<NotificationReplyOptions>() 
+                .Configure<IConfiguration>((options, configuration) =>
+                {
+                    options.EnableReplyFunctionality = configuration.GetValue<bool>("EnableReplyFunctionality", false);
+                });
+
             services.AddOptions<PublicCDNOptions>()
                 .Configure<IConfiguration>((options, configuration) =>
                 {
@@ -175,6 +183,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
             services.AddSingleton<INotificationDataRepository, NotificationDataRepository>();
             services.AddSingleton<IExportDataRepository, ExportDataRepository>();
             services.AddSingleton<IAppConfigRepository, AppConfigRepository>();
+            services.AddSingleton<IReplyDataRepository, ReplyDataRepository>();
 
             // Add service bus message queues.
             services.AddSingleton<IPrepareToSendQueue, PrepareToSendQueue>();

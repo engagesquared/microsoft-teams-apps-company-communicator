@@ -54,6 +54,11 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         public int TotalMessageCount { get; set; }
 
         /// <summary>
+        /// Gets or sets the total number of messages replies.
+        /// </summary>
+        public int RepliesCount { get; set; }
+
+        /// <summary>
         /// Gets or sets the sending started date time.
         /// </summary>
         public DateTime? SendingStartedDate { get; set; }

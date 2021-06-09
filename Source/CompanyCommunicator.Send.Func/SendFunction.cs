@@ -21,6 +21,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.Teams;
     using Microsoft.Teams.Apps.CompanyCommunicator.Send.Func.Services;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Azure Function App triggered by messages from a Service Bus queue
@@ -231,10 +232,23 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Send.Func
                 NotificationDataTableNames.SendingNotificationsPartition,
                 message.NotificationId);
 
+            var content = JsonConvert.DeserializeObject<JObject>(notification.Content);
+            if (notification.EnableReplies == true)
+            {
+                var replyButton = JsonConvert.DeserializeObject<JArray>($"[{{ \"type\": \"Action.Submit\", \"title\": \"Reply\", \"data\": {{ \"msteams\": {{ \"type\": \"messageBack\", \"value\": {{ \"notificationId\" : \"{notification.NotificationId}\", \"action\": \"getReplyCard\",  }} }} }} }}]");
+                if (content["actions"] != null)
+                {
+                    (content["actions"] as JArray).Add(replyButton.First);
+                } else
+                {
+                    content["actions"] = replyButton;
+                }
+            }
+
             var adaptiveCardAttachment = new Attachment()
             {
                 ContentType = AdaptiveCardContentType,
-                Content = JsonConvert.DeserializeObject(notification.Content),
+                Content = content,
             };
 
             return MessageFactory.Attachment(adaptiveCardAttachment);

@@ -22,6 +22,15 @@ export const getInitAdaptiveCard = (t: TFunction) => {
             "body": [
                 {
                     "type": "TextBlock",
+                    "text": "IMPORTANT!",
+                    "wrap": true,
+                    "size": "medium",
+                    "color": "attention",
+                    "weight": "bolder",
+                    "isVisible": false
+                },
+                {
+                    "type": "TextBlock",
                     "weight": "Bolder",
                     "text": titleTextAsString,
                     "size": "ExtraLarge",
@@ -55,52 +64,56 @@ export const getInitAdaptiveCard = (t: TFunction) => {
     );
 }
 
+export const setCardImportant = (card: any, important: boolean) => {
+    card.body[0].isVisible = important;
+}
+
 export const getCardTitle = (card: any) => {
-    return card.body[0].text;
+    return card.body[1].text;
 }
 
 export const setCardTitle = (card: any, title: string) => {
-    card.body[0].text = title;
+    card.body[1].text = title;
 }
 
 export const getCardImageLink = (card: any) => {
-    return card.body[1].url;
+    return card.body[2].url;
 }
 
 export const setCardImageLink = (card: any, imageLink?: string) => {
-    card.body[1].url = imageLink;
+    card.body[2].url = imageLink;
 }
 
 export const setCardImageWidth = (card: any, width: number) => {
-    card.body[1].width = `${width}px`;
-    card.body[1].size = null;
+    card.body[2].width = `${width}px`;
+    card.body[2].size = null;
 }
 
 export const setCardImageHeight = (card: any, height: number) => {
-    card.body[1].height = `${height}px`;
-    card.body[1].size = null;
+    card.body[2].height = `${height}px`;
+    card.body[2].size = null;
 }
 
 export const setCardImageSize = (card: any, size: string) => {
-    card.body[1].size = size;
-    card.body[1].width = null;
-    card.body[1].height = null;
+    card.body[2].size = size;
+    card.body[2].width = null;
+    card.body[2].height = null;
 }
 
 export const getCardSummary = (card: any) => {
-    return card.body[2].text;
-}
-
-export const setCardSummary = (card: any, summary?: string) => {
-    card.body[2].text = summary;
-}
-
-export const getCardAuthor = (card: any) => {
     return card.body[3].text;
 }
 
+export const setCardSummary = (card: any, summary?: string) => {
+    card.body[3].text = summary;
+}
+
+export const getCardAuthor = (card: any) => {
+    return card.body[4].text;
+}
+
 export const setCardAuthor = (card: any, author?: string) => {
-    card.body[3].text = author;
+    card.body[4].text = author;
 }
 
 export const getCardBtnTitle = (card: any) => {

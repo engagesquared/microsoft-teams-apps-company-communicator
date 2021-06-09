@@ -6,15 +6,15 @@ import { RouteComponentProps } from 'react-router-dom';
 import { withTranslation, WithTranslation } from "react-i18next";
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import * as AdaptiveCards from "adaptivecards";
-import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup, DropdownProps, Slider, SplitButton, Dialog, Ref } from '@fluentui/react-northstar'
+import { Button, Loader, Dropdown, Text, Flex, Input, TextArea, RadioGroup, DropdownProps, Slider, SplitButton, Dialog, Ref, Checkbox } from '@fluentui/react-northstar'
 import * as microsoftTeams from "@microsoft/teams-js";
 
 import './newMessage.scss';
 import './teamTheme.scss';
-import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification, getPublicCDNOptions, uploadFileToCDN } from '../../apis/messageListApi';
+import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification, getPublicCDNOptions, uploadFileToCDN, isEnableReplyFunctionality } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
-    setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize
+    setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize, setCardImportant
 } from '../AdaptiveCard/adaptiveCard';
 import { getBaseUrl } from '../../configVariables';
 import { ImageUtil } from '../../utility/imageutility';
@@ -47,7 +47,9 @@ export interface IDraftMessage {
     rosters: any[],
     teamsGroups: any[],
     groups: any[],
-    allUsers: boolean
+    allUsers: boolean,
+    enableReplies: boolean,
+    isImportant: boolean,
 }
 
 export interface formState {
@@ -59,6 +61,8 @@ export interface formState {
     imageWidth?: number,
     imageHeight?: number,
     btnTitle?: string,
+    enableReplies: boolean,
+    markAsImportant: boolean,
     author: string,
     card?: any,
     page: string,
@@ -89,6 +93,7 @@ export interface formState {
     openSelectImageDialog: boolean,
     publicCDNOptions: any,
     forceUpdateIndex: number,
+    isEnableRepliesFunctionality: boolean,
 }
 
 export interface INewMessageProps extends RouteComponentProps, WithTranslation {
@@ -120,6 +125,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             btnLink: "",
             imageLink: "",
             btnTitle: "",
+            enableReplies: false,
+            markAsImportant: false,
             card: this.card,
             page: "CardCreation",
             teamsOptionSelected: true,
@@ -146,6 +153,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             openSelectImageDialog: false,
             publicCDNOptions: {},
             forceUpdateIndex: 0,
+            isEnableRepliesFunctionality: false,
         }
     }
 
@@ -195,8 +203,11 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 })
             }
         });
-        const publicCDNOptions = await getPublicCDNOptions();
-        this.setState({ publicCDNOptions });
+        const [publicCDNOptions, isEnableReplies] = await Promise.all([
+            getPublicCDNOptions(),
+            isEnableReplyFunctionality()
+        ]);
+        this.setState({ publicCDNOptions, isEnableRepliesFunctionality: isEnableReplies });
     }
 
     private makeDropdownItems = (items: any[] | undefined) => {
@@ -330,6 +341,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 selectedGroups: draftMessageDetail.groups
             });
 
+            setCardImportant(this.card, draftMessageDetail.isImportant);
             setCardTitle(this.card, draftMessageDetail.title);
             setCardImageLink(this.card, draftMessageDetail.imageLink);
             setCardImageSize(this.card, draftMessageDetail.imageSize);
@@ -353,7 +365,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 btnTitle: draftMessageDetail.buttonTitle,
                 author: draftMessageDetail.author,
                 allUsersOptionSelected: draftMessageDetail.allUsers,
-                loader: false
+                loader: false,
+                markAsImportant: draftMessageDetail.isImportant,
             }, () => {
                 this.updateCard();
             });
@@ -524,7 +537,10 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                                 </a>
                                             </Flex>
                                         </div>
-
+                                        <Checkbox label="Mark as important" checked={this.state.markAsImportant} onChange={() => {
+                                            setCardImportant(this.card, !this.state.markAsImportant);
+                                            this.setState({ markAsImportant: !this.state.markAsImportant}, () => this.updateCard());
+                                        }}/>
                                         <Input className="inputField"
                                             value={this.state.author}
                                             label={this.localize("Author")}
@@ -541,15 +557,18 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                             onChange={this.onBtnTitleChanged}
                                             autoComplete="off"
                                         />
-                                        <Input className="inputField"
-                                            fluid
-                                            value={this.state.btnLink}
-                                            label={this.localize("ButtonURL")}
-                                            placeholder={this.localize("ButtonURL")}
-                                            onChange={this.onBtnLinkChanged}
-                                            error={!(this.state.errorButtonUrlMessage === "")}
-                                            autoComplete="off"
-                                        />
+                                        <Flex gap="gap.small" column>
+                                            <Input className="inputField"
+                                                fluid
+                                                value={this.state.btnLink}
+                                                label={this.localize("ButtonURL")}
+                                                placeholder={this.localize("ButtonURL")}
+                                                onChange={this.onBtnLinkChanged}
+                                                error={!(this.state.errorButtonUrlMessage === "")}
+                                                autoComplete="off"
+                                            />
+                                            {this.state.isEnableRepliesFunctionality ? <Checkbox label="Enable replies" checked={this.state.enableReplies} onChange={() => this.setState({ enableReplies: !this.state.enableReplies})}/> : null}
+                                        </Flex>
                                         <Text className={(this.state.errorButtonUrlMessage === "") ? "hide" : "show"} error size="small" content={this.state.errorButtonUrlMessage} />
                                     </Flex>
                                 </Flex.Item>
@@ -731,6 +750,7 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             selectedRostersNum: data.value === 'rosters' ? this.state.selectedRostersNum : 0,
             selectedGroups: data.value === 'groups' ? this.state.selectedGroups : [],
             selectedGroupsNum: data.value === 'groups' ? this.state.selectedGroupsNum : 0,
+            enableReplies: data.value === 'teams' ? false : this.state.enableReplies
         });
     }
 
@@ -787,7 +807,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             selectedRosters: [],
             selectedRostersNum: 0,
             selectedGroups: [],
-            selectedGroupsNum: 0
+            selectedGroupsNum: 0,
+            enableReplies: false
         })
     }
 
@@ -899,7 +920,9 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             rosters: selctedRosters,
             teamsGroups: selctedTeamGroups,
             groups: selectedGroups,
-            allUsers: this.state.allUsersOptionSelected
+            allUsers: this.state.allUsersOptionSelected,
+            enableReplies: this.state.enableReplies,
+            isImportant: this.state.markAsImportant,
         };
 
         if (this.state.isEditSentMessage) {

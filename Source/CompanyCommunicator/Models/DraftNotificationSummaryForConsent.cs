@@ -36,5 +36,15 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         /// Gets or sets a value indicating whether the All Users option is selected.
         /// </summary>
         public bool AllUsers { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the notification allows replies.
+        /// </summary>
+        public bool EnableReplies { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the notification important.
+        /// </summary>
+        public bool IsImportant { get; set; }
     }
 }

@@ -126,3 +126,15 @@ export const uploadFileToCDN = async (file: any): Promise<any> => {
     const response = await axios.post(url, formData);
     return response.data;
 };
+
+export const isEnableReplyFunctionality = async (): Promise<boolean> => {
+    let url = baseAxiosUrl + "/notificationReplies/isEnableReplyFunctionality";
+    const response = await axios.get(url);
+    return response.data;
+};
+
+export const downloadReplies = async (id: string): Promise<any> => {
+    let url = baseAxiosUrl + `/notificationReplies/replies/${id}`;
+    const response = await axios.get(url);
+    return response.data;
+};

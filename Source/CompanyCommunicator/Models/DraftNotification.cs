@@ -54,6 +54,16 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         public bool AllUsers { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether a notification allows replies.
+        /// </summary>
+        public bool EnableReplies { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether a notification important.
+        /// </summary>
+        public bool IsImportant { get; set; }
+
+        /// <summary>
         /// Validates a draft notification.
         /// Teams and Rosters property should not contain more than 20 items.
         /// </summary>

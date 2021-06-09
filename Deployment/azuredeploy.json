@@ -53,6 +53,13 @@
         "description": "If proactive app installation should be enabled."
       }
     },
+    "EnableReplyFunctionality": {
+      "defaultValue": false,
+      "type": "Bool",
+      "metadata": {
+        "description": "Enables a message reply functionality for user application."
+      }
+    },
     "UserAppExternalId": {
       "defaultValue": "148a66bb-e83d-425a-927d-09f4299a9274",
       "minLength": 1,
@@ -210,6 +217,7 @@
     "frontDoorName": "[parameters('baseResourceName')]",
     "frontDoorDomain": "[toLower(concat(variables('frontDoorName'), '.azurefd.net'))]",
     "ProactivelyInstallUserApp": "[parameters('ProactivelyInstallUserApp')]",
+    "EnableReplyFunctionality": "[parameters('EnableReplyFunctionality')]",
     "UserAppExternalId": "[parameters('UserAppExternalId')]",
     "i18n:DefaultCulture": "[parameters('DefaultCulture')]",
     "i18n:SupportedCultures": "[parameters('SupportedCultures')]"
@@ -286,6 +294,10 @@
             {
               "name": "ProactivelyInstallUserApp",
               "value": "[variables('ProactivelyInstallUserApp')]"
+            },
+            {
+              "name": "EnableReplyFunctionality",
+              "value": "[variables('EnableReplyFunctionality')]"
             },
             {
               "name": "UserAppExternalId",
@@ -619,6 +631,10 @@
             {
               "name": "ProactivelyInstallUserApp",
               "value": "[variables('ProactivelyInstallUserApp')]"
+            },
+            {
+              "name": "EnableReplyFunctionality",
+              "value": "[variables('EnableReplyFunctionality')]"
             },
             {
               "name": "UserAppExternalId",

@@ -59,6 +59,16 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Models
         public bool AllUsers { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether a notification allow replies.
+        /// </summary>
+        public bool EnableReplies { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether a notification important.
+        /// </summary>
+        public bool IsImportant { get; set; }
+
+        /// <summary>
         /// Gets or sets error message.
         /// </summary>
         public string ErrorMessage { get; set; }

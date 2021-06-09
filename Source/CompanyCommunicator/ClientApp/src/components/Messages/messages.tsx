@@ -5,7 +5,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTranslation, WithTranslation } from "react-i18next";
 import { TooltipHost } from 'office-ui-fabric-react';
-import { Loader, List, Flex, Text, AcceptIcon, CloseIcon, ExclamationCircleIcon } from '@fluentui/react-northstar';
+import { Loader, List, Flex, Text, AcceptIcon, CloseIcon, ExclamationCircleIcon, InfoIcon } from '@fluentui/react-northstar';
 import * as microsoftTeams from "@microsoft/teams-js";
 
 import { selectMessage, getMessagesList, getDraftMessagesList } from '../../actions';
@@ -218,6 +218,10 @@ class Messages extends React.Component<IMessageProps, IMessageState> {
                                 <span className="semiBold">{formatNumber(message.unknown)}</span>
                             </TooltipHost>
                         }
+                        <TooltipHost content={"Replies"} calloutProps={{ gapSpace: 0 }}>
+                            <InfoIcon xSpacing="both" outline />
+                            <span className="semiBold">{formatNumber(message.repliesCount)}</span>
+                        </TooltipHost>
                     </div>
                 </Flex.Item>
                 <Flex.Item size="size.quarter" variables={{ 'size.quarter': '24%' }} >

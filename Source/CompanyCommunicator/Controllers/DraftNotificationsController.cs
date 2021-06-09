@@ -163,6 +163,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                 Rosters = notification.Rosters,
                 Groups = notification.Groups,
                 AllUsers = notification.AllUsers,
+                EnableReplies = notification.EnableReplies,
+                IsImportant = notification.IsImportant,
             };
 
             await this.notificationDataRepository.CreateOrUpdateAsync(notificationEntity);
@@ -258,6 +260,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                 Rosters = notificationEntity.Rosters,
                 Groups = notificationEntity.Groups,
                 AllUsers = notificationEntity.AllUsers,
+                EnableReplies = notificationEntity.EnableReplies,
+                IsImportant = notificationEntity.IsImportant,
             };
 
             return this.Ok(result);
@@ -297,6 +301,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
                 RosterNames = await this.teamDataRepository.GetTeamNamesByIdsAsync(notificationEntity.Rosters),
                 GroupNames = groupNames,
                 AllUsers = notificationEntity.AllUsers,
+                EnableReplies = notificationEntity.EnableReplies,
+                IsImportant = notificationEntity.IsImportant,
             };
 
             return this.Ok(result);

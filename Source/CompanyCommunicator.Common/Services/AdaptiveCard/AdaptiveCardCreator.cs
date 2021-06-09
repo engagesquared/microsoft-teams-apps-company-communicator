@@ -31,7 +31,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
                 notificationDataEntity.Summary,
                 notificationDataEntity.Author,
                 notificationDataEntity.ButtonTitle,
-                notificationDataEntity.ButtonLink);
+                notificationDataEntity.ButtonLink,
+                notificationDataEntity.IsImportant);
         }
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
         /// <param name="author">The adaptive card's author value.</param>
         /// <param name="buttonTitle">The adaptive card's button title value.</param>
         /// <param name="buttonUrl">The adaptive card's button url value.</param>
+        /// <param name="isImportant">important.</param>
         /// <returns>The created adaptive card instance.</returns>
         public AdaptiveCard CreateAdaptiveCard(
             string title,
@@ -56,10 +58,23 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard
             string summary,
             string author,
             string buttonTitle,
-            string buttonUrl)
+            string buttonUrl,
+            bool isImportant)
         {
             var version = new AdaptiveSchemaVersion(1, 0);
             AdaptiveCard card = new AdaptiveCard(version);
+
+            if (isImportant)
+            {
+                card.Body.Add(new AdaptiveTextBlock()
+                {
+                    Text = "!IMPORTANT",
+                    Size = AdaptiveTextSize.Medium,
+                    Weight = AdaptiveTextWeight.Bolder,
+                    Color = AdaptiveTextColor.Warning,
+                    Wrap = true,
+                });
+            }
 
             card.Body.Add(new AdaptiveTextBlock()
             {

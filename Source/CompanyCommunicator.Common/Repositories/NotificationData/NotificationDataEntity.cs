@@ -169,6 +169,16 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.Notificat
         public bool AllUsers { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether a notification allow replies.
+        /// </summary>
+        public bool EnableReplies { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether a notification important.
+        /// </summary>
+        public bool IsImportant { get; set; }
+
+        /// <summary>
         /// Gets or sets the message version number.
         /// </summary>
         public string MessageVersion { get; set; }

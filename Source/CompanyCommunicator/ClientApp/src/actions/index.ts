@@ -16,6 +16,7 @@ type Notification = {
     throttled: number,
     title: string,
     totalMessageCount: number,
+    repliesCount: number,
 }
 
 export const selectMessage = (message: any) => {

@@ -55,6 +55,8 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Prep.Func.PreparingToSend
                 RowKey = notification.RowKey,
                 NotificationId = notification.Id,
                 Content = serializedContent,
+                EnableReplies = notification.EnableReplies,
+                IsImportant = notification.IsImportant,
             };
 
             await this.sendingNotificationDataRepository.CreateOrUpdateAsync(sendingNotification);
