@@ -12,12 +12,20 @@ function IsValidParam {
 # Validate input parameters.
 function ValidateParameters {
     $isValid = $true
-    if (-not(IsValidParam($parameters.adminLogin))) {
-        WriteE -message "Invalid adminLogin."
+    if (-not(IsValidParam($parameters.msAdminLogin))) {
+        WriteE -message "Invalid msAdminLogin."
         $isValid = $false;
     }
-    if (-not(IsValidParam($parameters.password))) {
+    if (-not(IsValidParam($parameters.msAdminPassword))) {
         WriteE -message "Invalid password."
+        $isValid = $false;
+    }
+    if (-not(IsValidParam($parameters.azureAccountLogin))) {
+        WriteE -message "Invalid azureAccountLogin."
+        $isValid = $false;
+    }
+    if (-not(IsValidParam($parameters.azureAccountPassword))) {
+        WriteE -message "Invalid azureAccountPassword."
         $isValid = $false;
     }
     if (-not(IsValidParam($parameters.tenantAdminUrl))) {
@@ -59,7 +67,7 @@ if (-not(ValidateParameters)) {
 }
 
 
-$credential = New-Object System.Management.Automation.PSCredential($parameters.adminLogin.Value, (ConvertTo-SecureString $parameters.password.Value -AsPlainText -Force))
+$credential = New-Object System.Management.Automation.PSCredential($parameters.msAdminLogin.Value, (ConvertTo-SecureString $parameters.msAdminPassword.Value -AsPlainText -Force))
 Connect-PnPOnline -Url $parameters.tenantAdminUrl.Value -Credentials $credential
 Set-PnPTenantCdnEnabled -CdnType Public -Enable $true
 
@@ -67,7 +75,7 @@ Set-PnPTenantCdnEnabled -CdnType Public -Enable $true
 $site = Get-PnPTenantSite -Identity $parameters.publicCDNSiteUrl.Value -ErrorAction SilentlyContinue
 if (!$site)
 {
-    New-PnPSite -Type CommunicationSite -Title $parameters.publicCDNSiteTitle.Value -Url $parameters.publicCDNSiteUrl.Value -Owner $parameters.adminLogin.Value
+    New-PnPSite -Type CommunicationSite -Title $parameters.publicCDNSiteTitle.Value -Url $parameters.publicCDNSiteUrl.Value -Owner $parameters.msAdminLogin.Value
 }
 
 Connect-PnPOnline -Url $parameters.publicCDNSiteUrl.Value -Credentials $credential
@@ -79,7 +87,8 @@ Set-PnPWebPermission -User "Everyone except external users" -AddRole "Contribute
 Add-PnPOrgAssetsLibrary -LibraryUrl "$($parameters.publicCDNSiteUrl.Value)/$($parameters.orgAssetsLibraryTitle.Value)" -CdnType Public
 
 
-Connect-AzureRmAccount -Credential $credential
+$azureCredential = New-Object System.Management.Automation.PSCredential($parameters.azureAccountLogin.Value, (ConvertTo-SecureString $parameters.azureAccountPassword.Value -AsPlainText -Force))
+Connect-AzureRmAccount -Credential $azureCredential
 $appService = Get-AzureRmWebApp -ResourceGroupName $parameters.resourceGroupName.Value -Name $parameters.appServiceName.Value
 $appSettings = $appService.SiteConfig.AppSettings
 $newAppSettings = @{}
