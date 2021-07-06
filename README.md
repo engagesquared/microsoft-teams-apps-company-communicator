@@ -8,6 +8,11 @@ Company Communicator is a custom Teams app that enables corporate teams to creat
 The app provides an easy interface for designated users to create, preview, collaborate and send messages. It's also a foundation for building custom targeted communication capabilities, such as custom telemetry on how many users acknowledged or interacted with a message.
 
 ![Company Communicator compose message screen](https://github.com/OfficeDev/microsoft-teams-apps-company-communicator/wiki/images/CompanyCommunicatorCompose.png)
+### App Walkthrough
+
+Click the image below to open the walkthrough video:
+
+[![Company Communicator Walkthrough](https://img.youtube.com/vi/sEpFhqVTyj4/0.jpg)](https://www.youtube.com/watch?v=sEpFhqVTyj4)
 
 ### Key features
 * **Message creation:** Easily create messages by using a team tab where team members who are permissioned can collaborate and create messages.
