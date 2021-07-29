@@ -8,6 +8,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
     using System;
     using System.IO;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Graph;
 
     /// <summary>
@@ -31,25 +32,56 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
         private int MaxRetry { get; set; } = 2;
 
         /// <summary>
-        /// get groups by ids.
+        /// get file by rel path.
         /// </summary>
-        /// <param name="siteId">siteId.</param>
-        /// <param name="webId">webId.</param>
-        /// <param name="listId">listId.</param>
-        /// <param name="sharepointHostName">sharepointHostName.</param>
+        /// <param name="path">path.</param>
+        /// <param name="groupId">groupId.</param>
+        /// <returns>file.</returns>
+        public async Task<Stream> GetFileStreamByPath(string path, string groupId)
+        {
+            var result = await this.graphServiceClient.Groups[groupId]
+                                                    .Drive
+                                                    .Root
+                                                    .ItemWithPath(path)
+                                                    .Content
+                                                    .Request()
+                                                    .GetAsync();
+            return result;
+        }
+
+        /// <summary>
+        /// get file by rel path.
+        /// </summary>
+        /// <param name="path">path.</param>
+        /// <param name="groupId">groupId.</param>
+        /// <returns>file.</returns>
+        public async Task<DriveItem> GetFileByPath(string path, string groupId)
+        {
+            var result = await this.graphServiceClient.Groups[groupId]
+                                                    .Drive
+                                                    .Root
+                                                    .ItemWithPath(path)
+                                                    .Request()
+                                                    .GetAsync();
+            return result;
+        }
+
+        /// <summary>
+        /// upload file for group.
+        /// </summary>
+        /// <param name="groupId">groupId.</param>
         /// <param name="stream">stream.</param>
         /// <returns>file url.</returns>
-        public async Task<string> UploadFileToPublicCDN(string siteId, string webId, string listId, string sharepointHostName, Stream stream, string fileName)
+        public async Task<string> UploadFileForGroup(string groupId, IFormFile file, string fileName)
         {
-            var result = await this.graphServiceClient
-                            .Sites[$"{sharepointHostName}.sharepoint.com,{siteId},{webId}"]
-                            .Lists[listId]
-                            .Drive
-                            .Root
-                            .ItemWithPath(fileName)
-                            .Content
-                            .Request()
-                            .PutAsync<DriveItem>(stream);
+            var stream = file.OpenReadStream();
+            var result = await this.graphServiceClient.Groups[groupId]
+                                                    .Drive
+                                                    .Root
+                                                    .ItemWithPath(fileName)
+                                                    .Content
+                                                    .Request()
+                                                    .PutAsync<DriveItem>(stream);
             return result.WebUrl;
         }
     }

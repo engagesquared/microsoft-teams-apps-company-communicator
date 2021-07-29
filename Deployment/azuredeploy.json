@@ -196,6 +196,10 @@
     "botAppUrl": "[concat('https://', variables('botAppDomain'))]",
     "hostingPlanName": "[parameters('baseResourceName')]",
     "storageAccountName": "[uniquestring(concat(resourceGroup().id, parameters('baseResourceName')))]",
+    "storageContainerName": "cdncontainer",
+    "cdnProfileName": "cdnProfile",
+    "cdnEndpointName": "[concat(variables('storageAccountName'), '-blob-core-windows-net')]",
+    "cdnOrigin": "[concat(variables('storageAccountName'), '.blob.core.windows.net')]",
     "appInsightsName": "[parameters('baseResourceName')]",
     "prepFunctionAppName": "[concat(parameters('baseResourceName'), '-prep-function')]",
     "sendFunctionAppName": "[concat(parameters('baseResourceName'), '-function')]",
@@ -226,16 +230,62 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2021-02-01",
       "location": "[parameters('location')]",
       "kind": "Storage",
       "properties": {
         "supportsHttpsTrafficOnly": true,
-        "allowBlobPublicAccess": false
+        "allowBlobPublicAccess": true
       },
       "sku": {
         "name": "Standard_LRS"
-      }
+      },
+      "resources": [
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2021-02-01",
+          "name": "[concat('default/', variables('storageContainerName'))]",
+          "properties": {
+            "publicAccess": "Container"
+          },
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Cdn/profiles",
+      "apiVersion": "2020-04-15",
+      "name": "[variables('cdnProfileName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_Microsoft"
+      },
+      "resources": [
+        {
+          "type": "endpoints",
+          "apiVersion": "2020-04-15",
+          "name": "[variables('cdnEndpointName')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Cdn/profiles', variables('cdnProfileName'))]"
+          ],
+          "properties": {
+            "originHostHeader": "[variables('cdnOrigin')]",
+            "isHttpAllowed": true,
+            "isHttpsAllowed": true,
+            "origins": [
+              {
+                "name": "cdn-origin",
+                "properties": {
+                  "hostName": "[variables('cdnOrigin')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "type": "Microsoft.Web/serverfarms",

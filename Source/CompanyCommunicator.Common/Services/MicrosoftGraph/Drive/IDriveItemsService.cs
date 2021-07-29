@@ -5,6 +5,8 @@
 
 namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGraph
 {
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.Graph;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -14,15 +16,28 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGrap
     public interface IDriveItemsService
     {
         /// <summary>
-        /// get groups by ids.
+        /// upload file for group.
         /// </summary>
-        /// <param name="siteId">siteId.</param>
-        /// <param name="webId">webId.</param>
-        /// <param name="listId">listId.</param>
-        /// <param name="sharepointHostName">sharepointHostName.</param>
-        /// <param name="stream">stream.</param>
+        /// <param name="groupId">siteId.</param>
+        /// <param name="file">file.</param>
         /// <param name="fileName">fileName.</param>
         /// <returns>file url.</returns>
-        Task<string> UploadFileToPublicCDN(string siteId, string webId, string listId, string sharepointHostName, Stream stream, string fileName);
+        Task<string> UploadFileForGroup(string groupId, IFormFile file, string fileName);
+
+        /// <summary>
+        /// get file stream by rel path.
+        /// </summary>
+        /// <param name="path">path.</param>
+        /// <param name="groupId">groupId.</param>
+        /// <returns>file.</returns>
+        Task<Stream> GetFileStreamByPath(string path, string groupId);
+
+        /// <summary>
+        /// get file stream by rel path.
+        /// </summary>
+        /// <param name="path">path.</param>
+        /// <param name="groupId">groupId.</param>
+        /// <returns>file.</returns>
+        Task<DriveItem> GetFileByPath(string path, string groupId);
     }
 }

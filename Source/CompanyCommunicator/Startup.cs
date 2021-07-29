@@ -31,6 +31,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.UserData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AdaptiveCard;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AzureStorage;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.CommonBot;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MessageQueues;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MessageQueues.DataQueue;
@@ -130,15 +131,6 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
                     options.EnableReplyFunctionality = configuration.GetValue<bool>("EnableReplyFunctionality", false);
                 });
 
-            services.AddOptions<PublicCDNOptions>()
-                .Configure<IConfiguration>((options, configuration) =>
-                {
-                    options.SharepointHostName = configuration.GetValue<string>("SharepointHostName");
-                    options.SiteId = configuration.GetValue<string>("PublicCDNSiteId");
-                    options.WebId = configuration.GetValue<string>("PublicCDNWebId");
-                    options.LibraryId = configuration.GetValue<string>("PublicCDNListId");
-                });
-
             services.AddOptions();
 
             // Add localization services.
@@ -158,9 +150,10 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
             });
 
             // Add blob client.
-            services.AddSingleton(sp => new BlobContainerClient(
-                sp.GetService<IConfiguration>().GetValue<string>("StorageAccountConnectionString"),
-                Common.Constants.BlobContainerName));
+            services.AddSingleton<BlobContainerClientResolver>(sp => containerName =>
+            {
+                return new BlobContainerClient(sp.GetService<IConfiguration>().GetValue<string>("StorageAccountConnectionString"), containerName);
+            });
 
             // The bot needs an HttpClient to download and upload files.
             services.AddHttpClient();
@@ -210,6 +203,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator
             services.AddTransient<IAppSettingsService, AppSettingsService>();
             services.AddTransient<IUserDataService, UserDataService>();
             services.AddTransient<ITeamMembersService, TeamMembersService>();
+            services.AddTransient<CDNImagesBlobContainerService>();
         }
 
         /// <summary>

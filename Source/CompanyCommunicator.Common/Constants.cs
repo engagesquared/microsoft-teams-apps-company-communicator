@@ -51,6 +51,11 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Common
         public const string BlobContainerName = "exportdatablobs";
 
         /// <summary>
+        /// blob image cdn container name.
+        /// </summary>
+        public const string BlobImagesCDNContainerName = "cdncontainer";
+
+        /// <summary>
         /// get the group type Hidden Membership.
         /// </summary>
         public const string HiddenMembership = "HiddenMembership";

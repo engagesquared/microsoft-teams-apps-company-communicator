@@ -10,48 +10,42 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Options;
     using Microsoft.Teams.Apps.CompanyCommunicator.Authentication;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AzureStorage;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.MicrosoftGraph;
-    using Microsoft.Teams.Apps.CompanyCommunicator.Controllers.Options;
 
     [Route("api/publicCDN")]
     [Authorize(PolicyNames.MustBeValidUpnPolicy)]
     public class PublicCDNController : ControllerBase
     {
         private readonly IDriveItemsService driveItemsService;
-        private readonly string sharepointHostName;
-        private readonly string siteId;
-        private readonly string webId;
-        private readonly string libraryId;
+        private readonly CDNImagesBlobContainerService cdnImagesBlobContainerClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PublicCDNController"/> class.
         /// </summary>
-        /// <param name="publicCDNOptions">The authentication options.</param>
-        public PublicCDNController(IOptions<PublicCDNOptions> publicCDNOptions, IDriveItemsService driveItemsService)
+        public PublicCDNController(IDriveItemsService driveItemsService, CDNImagesBlobContainerService cdnImagesBlobContainerClient)
         {
-            if (publicCDNOptions is null)
-            {
-                throw new ArgumentNullException(nameof(publicCDNOptions));
-            }
-
             this.driveItemsService = driveItemsService;
-            this.sharepointHostName = publicCDNOptions.Value.SharepointHostName;
-            this.siteId = publicCDNOptions.Value.SiteId;
-            this.webId = publicCDNOptions.Value.WebId;
-            this.libraryId = publicCDNOptions.Value.LibraryId;
+            this.cdnImagesBlobContainerClient = cdnImagesBlobContainerClient;
         }
 
+
         /// <summary>
-        /// Retrieve public cdn options.
+        /// Create public copy.
         /// </summary>
-        /// <returns>data</returns>
-        [HttpGet("options")]
-        public ActionResult<PublicCDNOptions> GetPublicCDNLibraryDataForMGTControl()
+        /// <returns>file url</returns>
+        [HttpPost("copy")]
+        public async Task<ActionResult<string>> UploadFile(string path, string groupId)
         {
-            var result = new PublicCDNOptions() { LibraryId = this.libraryId, WebId = this.webId, SiteId = this.siteId, SharepointHostName = this.sharepointHostName } as object;
-            return this.Ok(result);
+            var driveItemTask = this.driveItemsService.GetFileByPath(path, groupId);
+            var driveItemStreamTask = this.driveItemsService.GetFileStreamByPath(path, groupId);
+            await Task.WhenAll(driveItemTask, driveItemStreamTask);
+            var driveItem = driveItemTask.Result;
+            var driveItemStream = driveItemStreamTask.Result;
+            var file = new FormFile(driveItemStream, 0, driveItemStream.Length, driveItem.Name, driveItem.Name);
+            var fileAbsoluteUrl = await this.cdnImagesBlobContainerClient.UploadFileToBlobContainer(file, $"{groupId}-{file.FileName}", driveItem.File.MimeType);
+            return this.Ok(fileAbsoluteUrl);
         }
 
         /// <summary>
@@ -59,11 +53,11 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Controllers
         /// </summary>
         /// <returns>file url</returns>
         [HttpPost("content")]
-        public async Task<ActionResult<string>> UploadFile(IFormFile file)
+        public async Task<ActionResult<string>> UploadFile(IFormFile file, string groupId)
         {
-            var stream = file.OpenReadStream();
-            var link = await this.driveItemsService.UploadFileToPublicCDN(this.siteId, this.webId, this.libraryId, this.sharepointHostName, stream, file.FileName);
-            return this.Ok(link);
+            await this.driveItemsService.UploadFileForGroup(groupId, file, file.FileName);
+            var fileAbsoluteUrl = await this.cdnImagesBlobContainerClient.UploadFileToBlobContainer(file, $"{groupId}-{file.FileName}", file.ContentType);
+            return this.Ok(fileAbsoluteUrl);
         }
     }
 }

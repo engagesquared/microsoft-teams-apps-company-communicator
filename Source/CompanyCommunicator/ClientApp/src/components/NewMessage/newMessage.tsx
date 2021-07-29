@@ -11,7 +11,7 @@ import * as microsoftTeams from "@microsoft/teams-js";
 
 import './newMessage.scss';
 import './teamTheme.scss';
-import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification, getPublicCDNOptions, uploadFileToCDN, isEnableReplyFunctionality } from '../../apis/messageListApi';
+import { getDraftNotification, getTeams, createDraftNotification, updateDraftNotification, searchGroups, getGroups, verifyGroupAccess, updateNotification, getSentNotification, uploadFileToCDN, isEnableReplyFunctionality, copyToCDN } from '../../apis/messageListApi';
 import {
     getInitAdaptiveCard, setCardTitle, setCardImageLink, setCardSummary,
     setCardAuthor, setCardBtn, setCardImageWidth, setCardImageHeight, setCardImageSize, setCardImportant
@@ -91,9 +91,10 @@ export interface formState {
     isEditSentMessage: boolean,
     submitIsLoading: boolean,
     openSelectImageDialog: boolean,
-    publicCDNOptions: any,
+    groupId?: string,
     forceUpdateIndex: number,
     isEnableRepliesFunctionality: boolean,
+    imageIsLoading: boolean,
 }
 
 export interface INewMessageProps extends RouteComponentProps, WithTranslation {
@@ -151,14 +152,20 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             isEditSentMessage: false,
             submitIsLoading: false,
             openSelectImageDialog: false,
-            publicCDNOptions: {},
+            groupId: "",
             forceUpdateIndex: 0,
             isEnableRepliesFunctionality: false,
+            imageIsLoading: false,
         }
     }
 
     public async componentDidMount() {
         microsoftTeams.initialize();
+        microsoftTeams.getContext((context) => {
+            this.setState({
+                groupId: context.groupId,
+            });
+        });
         //- Handle the Esc key
         document.addEventListener("keydown", this.escFunction, false);
         let params = this.props.match.params;
@@ -203,11 +210,9 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                 })
             }
         });
-        const [publicCDNOptions, isEnableReplies] = await Promise.all([
-            getPublicCDNOptions(),
-            isEnableReplyFunctionality()
-        ]);
-        this.setState({ publicCDNOptions, isEnableRepliesFunctionality: isEnableReplies });
+
+        const isEnableReplies = await isEnableReplyFunctionality();
+        this.setState({ isEnableRepliesFunctionality: isEnableReplies });
     }
 
     private makeDropdownItems = (items: any[] | undefined) => {
@@ -410,6 +415,8 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                                 onChange={this.onImageLinkChanged}
                                                 error={!(this.state.errorImageUrlMessage === "")}
                                                 autoComplete="off"
+                                                disabled={this.state.imageIsLoading}
+                                                icon={this.state.imageIsLoading ? <Loader size="small"/> : null}
                                             />
                                             <Ref innerRef={this.fileUploadRef}>
                                                 <Input
@@ -439,15 +446,20 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
                                                 header="Select Image"
                                                 content={
                                                     <div className="mgtFileListContainer">
-                                                        <FileList
-                                                            fileListQuery={`/sites/${this.state.publicCDNOptions.sharepointHostName}.sharepoint.com,${this.state.publicCDNOptions.siteId},${this.state.publicCDNOptions.webId}/lists/${this.state.publicCDNOptions.libraryId}/drive/root/children?a=${this.state.forceUpdateIndex}`}
-                                                            itemClick={(event: any) => {
-                                                                if (event) {
-                                                                    this.onImageLinkChanged(event);
-                                                                    this.setState({ openSelectImageDialog: false })
-                                                                }
-                                                            }}
-                                                        />
+                                                        {this.state.groupId ? 
+                                                            <FileList
+                                                                groupId={this.state.groupId}
+                                                                itemPath="/"
+                                                                fileExtensions={["jpg", "jpeg", "gif", "png", "bmp"]}
+                                                                itemClick={async (event: any) => {
+                                                                    if (event) {
+                                                                        this.setState({ openSelectImageDialog: false, imageIsLoading: true });
+                                                                        const url = await copyToCDN(`${event.detail.parentReference.path.split("root:")[1]}/${event.detail.name}`, this.state.groupId || "");
+                                                                        this.onImageLinkChanged(url);
+                                                                        this.setState({ imageIsLoading: false })
+                                                                    }
+                                                                }}
+                                                            /> : null}
                                                     </div>
                                                 }
                                                 open={this.state.openSelectImageDialog}
@@ -1011,19 +1023,13 @@ class NewMessage extends React.Component<INewMessageProps, formState> {
             return;
         }
 
-        const url = await uploadFileToCDN(e.target.files[0]);
+        this.setState({ imageIsLoading: true });
+        const url = await uploadFileToCDN(e.target.files[0], this.state.groupId || "");
         this.onImageLinkChanged(url)
+        this.setState({ imageIsLoading: false });
     }
 
-    private onImageLinkChanged = async (event: any) => {
-        let url = "";
-        if (event && event.target && event.target.value) {
-            url = event.target.value.toLowerCase()
-        } else if (event && event.detail && event.detail.webUrl) {
-            url = event.detail.webUrl
-        } else if (typeof event === "string" && event) {
-            url = event;
-        }
+    private onImageLinkChanged = async (url: any) => {
         if (url === "") {
             this.setState({
                 imageSize: ""

@@ -113,16 +113,20 @@ export const getAccessToken = async (): Promise<string> => {
     return response.data as string;
 };
 
-export const getPublicCDNOptions = async (): Promise<any> => {
-    let url = baseAxiosUrl + "/publicCDN/options";
-    const response = await axios.get(url);
-    return response.data;
-};
-
-export const uploadFileToCDN = async (file: any): Promise<any> => {
+export const uploadFileToCDN = async (file: any, groupId: string): Promise<any> => {
     let url = baseAxiosUrl + "/publicCDN/content";
     const formData = new FormData();
     formData.append("file", file, file.name);
+    formData.append("groupId", groupId);
+    const response = await axios.post(url, formData);
+    return response.data;
+};
+
+export const copyToCDN = async (path: string, groupId: string): Promise<any> => {
+    let url = baseAxiosUrl + "/publicCDN/copy";
+    const formData = new FormData();
+    formData.append("path", path);
+    formData.append("groupId", groupId);
     const response = await axios.post(url, formData);
     return response.data;
 };

@@ -20,6 +20,7 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Bot
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Repositories.ExportData;
     using Microsoft.Teams.Apps.CompanyCommunicator.Common.Resources;
     using Newtonsoft.Json.Linq;
+    using Microsoft.Teams.Apps.CompanyCommunicator.Common.Services.AzureStorage;
 
     /// <summary>
     /// Service to upload file to user's one drive.
@@ -36,17 +37,17 @@ namespace Microsoft.Teams.Apps.CompanyCommunicator.Bot
         /// </summary>
         /// <param name="clientFactory">http client factory.</param>
         /// <param name="exportDataRepository">Export Data Repository.</param>
-        /// <param name="blobContainerClient">azure blob container client.</param>
+        /// <param name="exportDataBlobContainerClient">azure blob container client.</param>
         /// <param name="localizer">Localization service.</param>
         public TeamsFileUpload(
             IHttpClientFactory clientFactory,
             IExportDataRepository exportDataRepository,
-            BlobContainerClient blobContainerClient,
+            BlobContainerClientResolver blobContainerClientResolver,
             IStringLocalizer<Strings> localizer)
         {
             this.clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
             this.exportDataRepository = exportDataRepository ?? throw new ArgumentNullException(nameof(exportDataRepository));
-            this.blobContainerClient = blobContainerClient ?? throw new ArgumentNullException(nameof(blobContainerClient));
+            this.blobContainerClient = blobContainerClientResolver(Common.Constants.BlobContainerName);
             this.localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
         }
 
