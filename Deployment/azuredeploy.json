@@ -165,20 +165,6 @@
       "metadata": {
         "description": "Location for all resources."
       }
-    },
-    "gitRepoUrl": {
-      "type": "string",
-      "metadata": {
-        "description": "The URL to the GitHub repository to deploy."
-      },
-      "defaultValue": "https://github.com/OfficeDev/microsoft-teams-company-communicator-app.git"
-    },
-    "gitBranch": {
-      "type": "string",
-      "metadata": {
-        "description": "The branch of the GitHub repository to deploy."
-      },
-      "defaultValue": "master"
     }
   },
   "variables": {
@@ -358,6 +344,10 @@
             {
               "name": "WEBSITE_NODE_DEFAULT_VERSION",
               "value": "10.15.2"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
             }
           ],
           "cors": {
@@ -376,22 +366,6 @@
         "[resourceId('Microsoft.Web/sites', variables('prepFunctionAppName'))]",
         "[resourceId('Microsoft.Web/sites', variables('sendFunctionAppName'))]",
         "[resourceId('Microsoft.Web/sites', variables('dataFunctionAppName'))]"
-      ],
-      "resources": [
-        {
-          "apiVersion": "2016-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "condition": "[not(empty(parameters('gitRepoUrl')))]",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('botAppName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('gitRepoUrl')]",
-            "branch": "[parameters('gitBranch')]",
-            "IsManualIntegration": true
-          }
-        }
       ]
     },
     {
@@ -679,6 +653,10 @@
             {
               "name": "ServiceBusConnection",
               "value": "[listkeys(variables('authRuleResourceId'), '2017-04-01').primaryConnectionString]"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
             }
           ]
         }
@@ -687,22 +665,6 @@
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
-      ],
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "condition": "[not(empty(parameters('gitRepoUrl')))]",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('prepFunctionAppName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('gitRepoUrl')]",
-            "branch": "[parameters('gitBranch')]",
-            "IsManualIntegration": true
-          }
-        }
       ]
     },
     {
@@ -783,6 +745,10 @@
             {
               "name": "ServiceBusConnection",
               "value": "[listkeys(variables('authRuleResourceId'), '2017-04-01').primaryConnectionString]"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
             }
           ]
         }
@@ -791,22 +757,6 @@
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
-      ],
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "condition": "[not(empty(parameters('gitRepoUrl')))]",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('sendFunctionAppName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('gitRepoUrl')]",
-            "branch": "[parameters('gitBranch')]",
-            "IsManualIntegration": true
-          }
-        }
       ]
     },
     {
@@ -899,6 +849,10 @@
             {
               "name": "ServiceBusConnection",
               "value": "[listkeys(variables('authRuleResourceId'), '2017-04-01').primaryConnectionString]"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
             }
           ]
         }
@@ -907,22 +861,6 @@
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
-      ],
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "condition": "[not(empty(parameters('gitRepoUrl')))]",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('dataFunctionAppName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('gitRepoUrl')]",
-            "branch": "[parameters('gitBranch')]",
-            "IsManualIntegration": true
-          }
-        }
       ]
     },
     {
