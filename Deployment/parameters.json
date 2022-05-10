@@ -64,11 +64,11 @@
     "Description": "The size of the hosting plan (small - 1, medium - 2, or large - 3). Default value: 1"
   },
   "gitRepoUrl": {
-    "Value": "https://github.com/OfficeDev/microsoft-teams-company-communicator-app.git",
+    "Value": "https://github.com/engagesquared/microsoft-teams-apps-company-communicator.git",
     "Description": "The URL to the GitHub repository to deploy."
   },
   "gitBranch": {
-    "Value": "master",
+    "Value": "feature-public-cdn",
     "Description": "The branch of the GitHub repository to deploy."
   },
   "appDisplayName": {
